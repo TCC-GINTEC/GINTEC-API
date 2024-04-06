@@ -1,0 +1,15 @@
+C:\Users\Nathan\source\repos\WebApiGintec.Application\bin\Debug\net8.0\WebApiGintec.Application.deps.json
+C:\Users\Nathan\source\repos\WebApiGintec.Application\bin\Debug\net8.0\WebApiGintec.Application.dll
+C:\Users\Nathan\source\repos\WebApiGintec.Application\bin\Debug\net8.0\WebApiGintec.Application.pdb
+C:\Users\Nathan\source\repos\WebApiGintec.Application\bin\Debug\net8.0\WebApiGintec.Repository.dll
+C:\Users\Nathan\source\repos\WebApiGintec.Application\bin\Debug\net8.0\WebApiGintec.Repository.pdb
+C:\Users\Nathan\source\repos\WebApiGintec.Application\obj\Debug\net8.0\WebApiGintec.Application.csproj.AssemblyReference.cache
+C:\Users\Nathan\source\repos\WebApiGintec.Application\obj\Debug\net8.0\WebApiGintec.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Nathan\source\repos\WebApiGintec.Application\obj\Debug\net8.0\WebApiGintec.Application.AssemblyInfoInputs.cache
+C:\Users\Nathan\source\repos\WebApiGintec.Application\obj\Debug\net8.0\WebApiGintec.Application.AssemblyInfo.cs
+C:\Users\Nathan\source\repos\WebApiGintec.Application\obj\Debug\net8.0\WebApiGintec.Application.csproj.CoreCompileInputs.cache
+C:\Users\Nathan\source\repos\WebApiGintec.Application\obj\Debug\net8.0\WebApiGintec.Application.csproj.CopyComplete
+C:\Users\Nathan\source\repos\WebApiGintec.Application\obj\Debug\net8.0\WebApiGintec.Application.dll
+C:\Users\Nathan\source\repos\WebApiGintec.Application\obj\Debug\net8.0\refint\WebApiGintec.Application.dll
+C:\Users\Nathan\source\repos\WebApiGintec.Application\obj\Debug\net8.0\WebApiGintec.Application.pdb
+C:\Users\Nathan\source\repos\WebApiGintec.Application\obj\Debug\net8.0\ref\WebApiGintec.Application.dll
