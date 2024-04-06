@@ -19,7 +19,7 @@ namespace WebApiGintec.Controllers
         }
 
         [HttpPost]
-        public IActionResult Get([FromBody] LoginRequest request)
+        public IActionResult Login([FromBody] LoginRequest request)
         {
             var authService = new AuthService(_context);
             var response = authService.Autenticar(request);            
