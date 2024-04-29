@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using System.Configuration;
 using System.Text;
 using System.Text.Json.Serialization;
 using WebApiGintec.Repository;
@@ -37,7 +38,7 @@ builder.Services.AddAuthentication
                });
 builder.Services.AddAuthorization();
 
-builder.Services.AddDbContext<GintecContext>(options => options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).UseMySQL("Server=18.208.167.95;Port=3306;Database=Gintec;User=nathan;Password=n@26jlcscrb5c0dB0l;"));
+builder.Services.AddDbContext<GintecContext>(options => options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).UseMySQL(builder.Configuration.GetConnectionString("Gintec-Release")));
 
 var app = builder.Build();
 

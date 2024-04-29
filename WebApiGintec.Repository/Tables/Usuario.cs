@@ -30,6 +30,8 @@ namespace WebApiGintec.Repository.Tables
 
         [Required]
         public int SalaCodigo { get; set; }
+        [Required]
+        public bool isPadrinho { get; set; }
 
         [ForeignKey("SalaCodigo")]
         public Sala Sala { get; set; }

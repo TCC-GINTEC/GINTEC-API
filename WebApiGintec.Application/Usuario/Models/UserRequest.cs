@@ -21,5 +21,6 @@ namespace WebApiGintec.Application.Usuario.Models
 
         public string Senha { get; set; }
         public int SalaCodigo { get; set; }
+        public bool IsPadrinho { get; set; }
     }
 }

@@ -75,7 +75,8 @@ namespace WebApiGintec.Application.Usuario
                     RM = request.RM,
                     SalaCodigo = request.SalaCodigo,
                     Senha = request.Senha,
-                    Status = request.Status
+                    Status = request.Status,
+                    isPadrinho = request.IsPadrinho == null ? false : request.IsPadrinho
                 });
                 _context.SaveChanges();
 

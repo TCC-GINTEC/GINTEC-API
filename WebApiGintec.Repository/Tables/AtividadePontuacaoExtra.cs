@@ -13,7 +13,7 @@ namespace WebApiGintec.Repository.Tables
         public int Pontuacao { get; set; }
 
         [Required]
-        public int AtividadeCodigo { get; set; }
+        public int AtividadeCodigo { get; set; }        
 
         [ForeignKey("AtividadeCodigo")]
         public Atividade? Atividade { get; set; }

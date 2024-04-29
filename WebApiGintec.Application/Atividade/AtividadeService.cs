@@ -142,6 +142,7 @@ namespace WebApiGintec.Application.Atividade
                         CampeonatoCodigo = request.CampeonatoCodigo,
                         AtividadePontuacaoExtraCodigo = request.AtividadePontuacaoExtraCodigo,
                         UsuarioCodigo = codigoUsuario,
+                        dataCad = DateTime.Now
                     }).Entity;
                 else
                     activityPerformed = _context.AtividadesCampeonatoRealizadas.Add(new AtividadeCampeonatoRealizada
@@ -149,6 +150,7 @@ namespace WebApiGintec.Application.Atividade
                         AtividadeCodigo = request.AtividadeCodigo,
                         AtividadePontuacaoExtraCodigo = request.AtividadePontuacaoExtraCodigo,
                         UsuarioCodigo = codigoUsuario,
+                        dataCad = DateTime.Now
                     }).Entity;
 
                 _context.SaveChanges();
