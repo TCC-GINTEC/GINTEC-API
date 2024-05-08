@@ -82,7 +82,7 @@ namespace WebApiGintec.Application.Sala
             try
             {
                 var lstRank = new List<RankingSala>();
-                var lstPontAlunos = _context.AtividadesCampeonatoRealizadas.Where(n => n.dataCad.Day == DateTime.Now.Day && n.dataCad.Month == DateTime.Now.Month && n.dataCad.Year == DateTime.Now.Year).Include(x => x.AtividadePontuacaoExtra).Include(x => x.Usuario).ToList();
+                var lstPontAlunos = _context.AtividadesCampeonatoRealizadas.Include(x => x.AtividadePontuacaoExtra).Include(x => x.Usuario).ToList().Where(n => n.dataCad.ToString("dd/MM/yyyy") == request.FiltroData.ToString("dd/MM/yyyy")).ToList();
 
                 foreach (var item in _context.Salas.ToList())
                 {

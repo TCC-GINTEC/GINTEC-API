@@ -40,12 +40,11 @@ namespace WebApiGintec.Controllers
                 response = sala.ObterRanking();
             else
                 response = sala.ObterRanking(request);
-
+                
             if (response.mensagem == "success")
                 return Ok(response.response);
             else
                 return BadRequest();
         }
-
     }
 }
