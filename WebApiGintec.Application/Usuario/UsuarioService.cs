@@ -4,6 +4,7 @@ using Org.BouncyCastle.Crypto.Modes.Gcm;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using WebApiGintec.Application.Usuario.Models;
@@ -117,6 +118,54 @@ namespace WebApiGintec.Application.Usuario
                 };
             }            
         }
+
+        public GenericResponse<List<PontuacaoAluno>> ObterPontuacaoTodosAlunos()
+        {
+            try
+            {
+                var usuarios = _context.Usuarios.Include(x => x.Sala).ToList();
+                var jogos = _context.AtividadesCampeonatoRealizadas.ToList();
+                var pontos = _context.AtividadesPontuacaoExtra.ToList();
+
+                List<PontuacaoAluno> lstResponse = new();
+
+                foreach (var usuario in usuarios)
+                {
+                    PontuacaoResponse dataResponse = new PontuacaoResponse();
+                    var jogosFeitos = jogos.Where(x => x.UsuarioCodigo == usuario.Codigo).ToList();
+                    int pontosExtra = pontos.Where(x => jogosFeitos.Select(i => i.AtividadePontuacaoExtraCodigo).Contains(x.Codigo)).Select(n => n.Pontuacao).Sum(u => u);
+                    int pontuacaoJogos = jogosFeitos.Count() * 300;
+
+                    dataResponse.PontuacaGeral = pontuacaoJogos + pontosExtra;
+                    dataResponse.CampeonatosFeitos = jogosFeitos.Where(x => x.CampeonatoCodigo != null).Count();
+                    dataResponse.AtividadesFeitos = jogosFeitos.Where(x => x.AtividadeCodigo != null).Count();
+
+                    lstResponse.Add(new PontuacaoAluno
+                    {
+                        Nome = usuario.Nome,
+                        Turma = usuario.Sala.Descricao,
+                        Pontos = dataResponse
+                    });
+                }
+
+                return new GenericResponse<List<PontuacaoAluno>>()
+                {
+                    mensagem = "success",
+                    response = lstResponse
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<List<PontuacaoAluno>>() 
+                {
+                    error = ex,
+                    mensagem = "failed",
+                    response = null
+                };
+                
+            }
+        }
+
         public GenericResponse<List<Repository.Tables.Usuario>> ObterTodosOsUsuarios()
         {
             try

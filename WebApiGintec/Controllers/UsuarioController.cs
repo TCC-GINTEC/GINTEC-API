@@ -69,12 +69,24 @@ namespace WebApiGintec.Controllers
         [Authorize]
         [Route("ObterPontuacao")]
         public IActionResult ObterPontuacao()
-        {
-            var atividadeService = new AtividadeService(_context);
+        {            
             var identidade = (ClaimsIdentity)HttpContext.User.Identity;
             var usuarioCodigo = identidade.FindFirst("usuarioCodigo").Value;
             var usuarioService = new UsuarioService(_context);
             var response = usuarioService.ObterPontuacao(Convert.ToInt32(usuarioCodigo));
+
+            if (response.mensagem == "success")
+                return Ok(response.response);
+            else
+                return BadRequest();
+        }
+        [HttpGet]
+        [Authorize]
+        [Route("ObterPontuacaoGeral")]
+        public IActionResult ObterPontuacaoGeral()
+        {            
+            var usuarioService = new UsuarioService(_context);
+            var response = usuarioService.ObterPontuacaoTodosAlunos();
 
             if (response.mensagem == "success")
                 return Ok(response.response);
