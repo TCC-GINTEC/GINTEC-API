@@ -73,17 +73,15 @@ namespace WebApiGintec.Controllers
         [Authorize]
         [Route("MarcarPontos")]
         public IActionResult MarcarPontuação([FromBody] AtividadeCampeonatoRealizadaRequest request)
-        {
-            var atividadeService = new AtividadeService(_context);
-            var identidade = (ClaimsIdentity)HttpContext.User.Identity;
-            var usuarioCodigo = identidade.FindFirst("usuarioCodigo").Value;
-            var response = atividadeService.MarcarPontos(request, Convert.ToInt32(usuarioCodigo));
+        {            
+            var atividadeService = new AtividadeService(_context);            
+            var response = atividadeService.MarcarPontos(request);
             if (response.mensagem == "success")
                 return Ok(response.response);
             else if (response.mensagem == "Score already marked")
                 return BadRequest(new {error = "Você já jogou este jogo/campeonato"});
             else
-                return BadRequest();
+                return BadRequest();            
         }
         #endregion
         #region Pontuacao
@@ -125,6 +123,22 @@ namespace WebApiGintec.Controllers
                 else
                     return BadRequest(new { error = "Score not exists" });
             }
+            else
+                return BadRequest();
+        }
+        #endregion
+        #region UsuariosAtividade
+        [HttpGet]
+        [Authorize]
+        [Route("AtividadesFeitas")]
+        public IActionResult ObterAtividadesFeitas()
+        {
+            var atividadeService = new AtividadeService(_context);
+            var identidade = (ClaimsIdentity)HttpContext.User.Identity;
+            var usuarioCodigo = identidade.FindFirst("usuarioCodigo").Value;
+            var response = atividadeService.ObterAtividadesFeitas(Convert.ToInt32(usuarioCodigo));
+            if (response.mensagem == "success")
+                return Ok(response.response);
             else
                 return BadRequest();
         }

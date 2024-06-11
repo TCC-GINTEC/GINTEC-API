@@ -93,5 +93,20 @@ namespace WebApiGintec.Controllers
             else
                 return BadRequest();
         }
+        [HttpPost]
+        [Authorize]
+        [Route("InformacoesQRCode")]
+        public IActionResult ObterInformacoesQRCode([FromBody] QRCodeRequest request)
+        {            
+            var usuarioService = new UsuarioService(_context);
+            var response = usuarioService.ObterInformacoesQRCode(request.Token);
+
+            if (response.mensagem == "success")
+                return Ok(response.response);
+            else if (response.mensagem == "QR Code Invalid")
+                return BadRequest(new { mensagem = "QR Code Inválido" });
+            else
+                return BadRequest();
+        }
     }
 }

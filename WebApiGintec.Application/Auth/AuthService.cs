@@ -5,6 +5,8 @@ using System.IdentityModel.Tokens.Jwt;
 using WebApiGintec.Repository;
 using WebApiGintec.Repository.Tables;
 using WebApiGintec.Application.Auth.Models;
+using WebApiGintec.Application.Util;
+using System.Security.Cryptography.Xml;
 
 namespace WebApiGintec.Application.Auth
 {
@@ -15,12 +17,42 @@ namespace WebApiGintec.Application.Auth
         {
             _context = context;
         }
-        public string Autenticar(LoginRequest request)
+        public GenericResponse<LoginResponse> Autenticar(LoginRequest request)
         {
-            var user = _context.Usuarios.FirstOrDefault(x => request.email == x.Email && request.password == x.Senha);
-            if (user != null)
-                return GeraTokenJwt(user);
-            return "";
+            try
+            {
+                var user = _context.Usuarios.FirstOrDefault(x => request.email == x.Email && request.password == x.Senha);
+                if (user != null)
+                {                    
+                    return new GenericResponse<LoginResponse>()
+                    {
+                        mensagem = "success",
+                        response = new LoginResponse()
+                        {
+                            Email = user.Email,
+                            Status = user.Status,
+                            Token = GeraTokenJwt(user),
+                            UsuarioCodigo = user.Codigo,
+                            AtividadeCodigo = user.AtividadeCodigo,
+                            CampeonatoCodigo = user.CampeonatoCodigo
+                        }
+
+                    };
+                }                    
+                return new GenericResponse<LoginResponse>()
+                {
+                    mensagem = "user not found",
+                };
+            }
+            catch(Exception ex)
+            {
+                return new GenericResponse<LoginResponse>()
+                {
+                    mensagem = "failed",
+                    error = ex
+                };
+            }
+            
         }
         private string GeraTokenJwt(Repository.Tables.Usuario usuario)
         {

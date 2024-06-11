@@ -22,11 +22,13 @@ namespace WebApiGintec.Controllers
         public IActionResult Login([FromBody] LoginRequest request)
         {
             var authService = new AuthService(_context);
-            var response = authService.Autenticar(request);            
-            if (string.IsNullOrEmpty(response))
+            var response = authService.Autenticar(request);
+            if (response.mensagem == "success")
+                return Ok(response.response);
+            else if (response.mensagem == "user not found")
                 return Unauthorized();
             else
-                return Ok(new { token = response });
+                return BadRequest();
         }       
     }
 }

@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace WebApiGintec.Application.Atividade.Models
 {
-    public class AtividadeCampeonatoRealizadaRequest
+    public class AtividadesFeitasResponse : Repository.Tables.Atividade
     {
-        public string token { get; set; }        
-        public int? AtividadePontuacaoExtraCodigo { get; set; }
+        public bool isRealizada { get; set; }
     }
 }

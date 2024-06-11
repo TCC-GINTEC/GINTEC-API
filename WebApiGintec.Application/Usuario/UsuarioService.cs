@@ -7,10 +7,12 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using WebApiGintec.Application.Commom;
 using WebApiGintec.Application.Usuario.Models;
 using WebApiGintec.Application.Util;
 using WebApiGintec.Repository;
 using WebApiGintec.Repository.Tables;
+using ZstdSharp.Unsafe;
 
 namespace WebApiGintec.Application.Usuario
 {
@@ -35,7 +37,11 @@ namespace WebApiGintec.Application.Usuario
                     RM = request.RM,
                     SalaCodigo = request.SalaCodigo,
                     Senha = request.Senha,
-                    Status = request.Status
+                    Status = request.Status,
+                    AtividadeCodigo = request.AtividadeCodigo,
+                    CampeonatoCodigo = request.CampeonatoCodigo,
+                    isPadrinho = request.IsPadrinho
+
                 });
                 _context.SaveChanges();
 
@@ -89,6 +95,33 @@ namespace WebApiGintec.Application.Usuario
             }
         }
 
+        public GenericResponse<Repository.Tables.Usuario> ObterInformacoesQRCode(string token)
+        {
+            try
+            {
+                var qrCode = new QRCodeService().DesencriptarQRCode(token);
+                var user = _context.Usuarios.FirstOrDefault(x => x.Codigo == qrCode.UsuarioCodigo && x.Email == qrCode.Email);
+                if (user != null)
+                return new GenericResponse<Repository.Tables.Usuario>()
+                {
+                    mensagem = "success",
+                    response = user
+                };
+                return new GenericResponse<Repository.Tables.Usuario>()
+                {
+                    mensagem = "QR Code Invalid"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<Repository.Tables.Usuario>()
+                {
+                    mensagem = "failed",
+                    error = ex
+                };
+            }
+        }
+
         public GenericResponse<PontuacaoResponse> ObterPontuacao(int codigoUsuario)
         {
             try
@@ -108,7 +141,7 @@ namespace WebApiGintec.Application.Usuario
                     response = dataResponse
                 };
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return new GenericResponse<PontuacaoResponse>()
                 {
@@ -116,7 +149,7 @@ namespace WebApiGintec.Application.Usuario
                     response = null,
                     error = ex
                 };
-            }            
+            }
         }
 
         public GenericResponse<List<PontuacaoAluno>> ObterPontuacaoTodosAlunos()
@@ -156,13 +189,13 @@ namespace WebApiGintec.Application.Usuario
             }
             catch (Exception ex)
             {
-                return new GenericResponse<List<PontuacaoAluno>>() 
+                return new GenericResponse<List<PontuacaoAluno>>()
                 {
                     error = ex,
                     mensagem = "failed",
                     response = null
                 };
-                
+
             }
         }
 

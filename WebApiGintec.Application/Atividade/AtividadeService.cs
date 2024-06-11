@@ -3,12 +3,15 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using WebApiGintec.Application.Atividade.Models;
+using WebApiGintec.Application.Commom;
 using WebApiGintec.Application.Util;
 using WebApiGintec.Repository;
 using WebApiGintec.Repository.Tables;
+using ZstdSharp.Unsafe;
 
 namespace WebApiGintec.Application.Atividade
 {
@@ -127,29 +130,31 @@ namespace WebApiGintec.Application.Atividade
                 };
             }
         }
-        public GenericResponse<Repository.Tables.AtividadeCampeonatoRealizada> MarcarPontos(AtividadeCampeonatoRealizadaRequest request, int codigoUsuario)
+        public GenericResponse<Repository.Tables.AtividadeCampeonatoRealizada> MarcarPontos(AtividadeCampeonatoRealizadaRequest request)
         {
             try
             {
-                if (_context.AtividadesCampeonatoRealizadas.Any(x => x.UsuarioCodigo == codigoUsuario &&
-                (x.AtividadeCodigo == request.AtividadeCodigo || x.CampeonatoCodigo == request.CampeonatoCodigo)))
+                var usuario = new QRCodeService().DesencriptarQRCode(request.token);
+                var usuarioDb = _context.Usuarios.FirstOrDefault(x => x.Codigo == usuario.UsuarioCodigo && x.Email == usuario.Email && (x.AtividadeCodigo != null || x.CampeonatoCodigo != null));
+                if (_context.AtividadesCampeonatoRealizadas.Any(x => x.UsuarioCodigo == usuarioDb.Codigo &&
+                (x.AtividadeCodigo == usuarioDb.AtividadeCodigo || x.CampeonatoCodigo == usuarioDb.CampeonatoCodigo)))
                     return new GenericResponse<AtividadeCampeonatoRealizada>() { mensagem = "Score already marked", response = null };
 
                 var activityPerformed = new AtividadeCampeonatoRealizada();
-                if (request.AtividadeCodigo == null)
+                if (usuarioDb.CampeonatoCodigo == null)
                     activityPerformed = _context.AtividadesCampeonatoRealizadas.Add(new AtividadeCampeonatoRealizada
                     {
-                        CampeonatoCodigo = request.CampeonatoCodigo,
+                        CampeonatoCodigo = usuarioDb.CampeonatoCodigo,
                         AtividadePontuacaoExtraCodigo = request.AtividadePontuacaoExtraCodigo,
-                        UsuarioCodigo = codigoUsuario,
+                        UsuarioCodigo = usuarioDb.Codigo,
                         dataCad = DateTime.Now
                     }).Entity;
                 else
                     activityPerformed = _context.AtividadesCampeonatoRealizadas.Add(new AtividadeCampeonatoRealizada
                     {
-                        AtividadeCodigo = request.AtividadeCodigo,
+                        AtividadeCodigo = usuarioDb.AtividadeCodigo,
                         AtividadePontuacaoExtraCodigo = request.AtividadePontuacaoExtraCodigo,
-                        UsuarioCodigo = codigoUsuario,
+                        UsuarioCodigo = usuarioDb.Codigo,
                         dataCad = DateTime.Now
                     }).Entity;
 
@@ -243,6 +248,46 @@ namespace WebApiGintec.Application.Atividade
                     error = ex
                 };
             }
+        }
+
+        public GenericResponse<List<AtividadesFeitasResponse>> ObterAtividadesFeitas(int usuarioCodigo)
+        {            
+                try
+                {
+                    var lstattFeitas = _context.AtividadesCampeonatoRealizadas.Where(x => x.UsuarioCodigo == usuarioCodigo && x.AtividadeCodigo != null).ToList();
+                    var lstatt = _context.Atividades.Include(x => x.Sala).Include(c => c.AtividadePontuacaoExtra).ToList();
+                    List<AtividadesFeitasResponse> responseBody = new();                    
+                    foreach (var item in lstatt)
+                    {
+                        responseBody.Add(new AtividadesFeitasResponse()
+                        {
+                            Codigo = item.Codigo,
+                            Descricao = item.Descricao,
+                            AtividadePontuacaoExtra = item.AtividadePontuacaoExtra,
+                            IsPontuacaoExtra = item.IsPontuacaoExtra,
+                            Sala = item.Sala,
+                            SalaCodigo = item.SalaCodigo,
+                            isRealizada = lstattFeitas.Any(x => x.AtividadeCodigo == item.Codigo)
+                        }) ;
+                    }
+
+
+                    var response =   new GenericResponse<List<AtividadesFeitasResponse>>()
+                    {
+                        mensagem = "success",
+                        response = responseBody
+                    };
+                    return response;
+                }
+                catch (Exception ex)
+                {
+                    return new GenericResponse<List<AtividadesFeitasResponse>>()
+                    {
+                        mensagem = "failed",
+                        response = null,
+                        error = ex
+                    };
+                }           
         }
         #endregion
     }

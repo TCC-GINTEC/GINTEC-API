@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebApiGintec.Repository.Tables
 {
@@ -30,6 +30,7 @@ namespace WebApiGintec.Repository.Tables
 
         [Required]
         public int SalaCodigo { get; set; }
+
         [Required]
         public bool isPadrinho { get; set; }
 
@@ -38,5 +39,15 @@ namespace WebApiGintec.Repository.Tables
 
         [ForeignKey("Status")]
         public StatusUsuario StatusUsuario { get; set; }
+        
+        public int? AtividadeCodigo { get; set; }
+
+        [ForeignKey("AtividadeCodigo")]
+        public Atividade Atividade { get; set; }
+        
+        public int? CampeonatoCodigo { get; set; }
+
+        [ForeignKey("CampeonatoCodigo")]
+        public Campeonato Campeonato { get; set; }
     }
 }
