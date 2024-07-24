@@ -18,5 +18,8 @@ namespace WebApiGintec.Repository.Tables
 
         [ForeignKey("SalaCodigo")]
         public Sala Sala { get; set; }
+        public List<CampeonatoFase> Fases { get; set; }
+        public List<CampeonatoJogo> Jogos { get; set; }
+        public List<CampeonatoResultado> Resultados { get; set; }
     }
 }

@@ -13,7 +13,10 @@ namespace WebApiGintec.Repository
         public DbSet<Atividade> Atividades { get; set; }
         public DbSet<AtividadePontuacaoExtra> AtividadesPontuacaoExtra { get; set; }
         public DbSet<AtividadeCampeonatoRealizada> AtividadesCampeonatoRealizadas { get; set; }
-        public DbSet<Campeonato> Campeonatos { get; set; }        
+        public DbSet<Campeonato> Campeonatos { get; set; }
+        public DbSet<CampeonatoFase> Fases { get; set; }
+        public DbSet<CampeonatoJogo> Jogos { get; set; }
+        public DbSet<CampeonatoResultado> Resultados { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -24,6 +27,9 @@ namespace WebApiGintec.Repository
             modelBuilder.Entity<AtividadePontuacaoExtra>().ToTable("tabAtividadePontuacaoExtra");
             modelBuilder.Entity<AtividadeCampeonatoRealizada>().ToTable("tabAtividadeCampeonatoRealizada");
             modelBuilder.Entity<Campeonato>().ToTable("tabCampeonato");            
+            modelBuilder.Entity<CampeonatoFase>().ToTable("tabCampeonatoFase");            
+            modelBuilder.Entity<CampeonatoJogo>().ToTable("tabCampeonatoJogo");            
+            modelBuilder.Entity<CampeonatoResultado>().ToTable("tabCampeonatoResultado");            
         }
 
     }
