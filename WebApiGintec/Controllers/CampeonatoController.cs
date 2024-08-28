@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Security.Claims;
 using WebApiGintec.Application.Campeonato;
+using WebApiGintec.Application.Campeonato.Models;
 using WebApiGintec.Repository;
 using WebApiGintec.Repository.Tables;
 
@@ -57,5 +59,13 @@ namespace WebApiGintec.Controllers
             var response = _campeonatoService.DeletarCampeonato(codigo);
             return response.mensagem == "success" ? (response.response ? NoContent() : BadRequest(new { error = "Campeonato não encontrado" })) : BadRequest(response);
         }
+        [HttpPost]
+        [Route("Iniciar")]
+        [Authorize]
+        public IActionResult IniciarCampeonato([FromBody] StartCampeonatoModel request)
+        {
+            var response = _campeonatoService.IniciarCampeonato(request);
+            return response.mensagem == "success" ? (response.response ? NoContent() : BadRequest(new { error = "Campeonato não encontrado" })) : BadRequest(response);
+        }        
     }
 }

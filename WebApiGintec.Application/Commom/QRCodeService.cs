@@ -22,7 +22,7 @@ namespace WebApiGintec.Application.Commom
             using StringContent jsonContent = new(
         JsonConvert.SerializeObject(new
         {
-            mensagem = token
+            mensagem = token.Replace(" ", "+")
         }),
         Encoding.UTF8,
         "application/json");

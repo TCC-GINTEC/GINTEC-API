@@ -39,15 +39,16 @@ namespace WebApiGintec.Repository.Tables
 
         [ForeignKey("Status")]
         public StatusUsuario StatusUsuario { get; set; }
-        
+
         public int? AtividadeCodigo { get; set; }
 
         [ForeignKey("AtividadeCodigo")]
         public Atividade Atividade { get; set; }
-        
+
         public int? CampeonatoCodigo { get; set; }
 
         [ForeignKey("CampeonatoCodigo")]
         public Campeonato Campeonato { get; set; }
+        public List<AtividadeCampeonatoRealizada> AtividadeCampeonatoRealizada { get; set; }
     }
 }

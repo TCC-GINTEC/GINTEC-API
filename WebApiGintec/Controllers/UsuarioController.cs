@@ -30,6 +30,30 @@ namespace WebApiGintec.Controllers
             else
                 return BadRequest();
         }
+        [HttpGet]
+        [Route("{id}")]
+        [Authorize]
+        public IActionResult ObterUsuarioPorCodigo([FromRoute] int id)
+        {
+            var usuarioService = new UsuarioService(_context);
+            var response = usuarioService.ObterUsuarioPorCodigo(id);
+            if (response.mensagem == "success")
+                return Ok(response.response);
+            else
+                return BadRequest();
+        }
+        [HttpGet]
+        [Route("Sala/{id}")]
+        [Authorize]
+        public IActionResult ObterTodosOsUsuariosPorSala([FromRoute] int id)
+        {
+            var usuarioService = new UsuarioService(_context);
+            var response = usuarioService.ObterTodosOsUsuariosPorSala(id);
+            if (response.mensagem == "success")
+                return Ok(response.response);
+            else
+                return BadRequest();
+        }
         [HttpPost]
         [Authorize]
         public IActionResult InserirUsuario([FromBody] UserRequest request)

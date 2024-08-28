@@ -21,7 +21,7 @@ namespace WebApiGintec.Application.Auth
         {
             try
             {
-                var user = _context.Usuarios.FirstOrDefault(x => request.email == x.Email && request.password == x.Senha);
+                var user = _context.Usuarios.FirstOrDefault(x => request.email == x.RM && request.password == x.Senha) ?? _context.Usuarios.FirstOrDefault(x => request.email == x.Email && request.password == x.Senha);
                 if (user != null)
                 {                    
                     return new GenericResponse<LoginResponse>()

@@ -176,7 +176,7 @@ namespace WebApiGintec.Application.Usuario
                     lstResponse.Add(new PontuacaoAluno
                     {
                         Nome = usuario.Nome,
-                        Turma = usuario.Sala.Descricao,
+                        Turma = $"{usuario.Sala.Serie}º{usuario.Sala.Descricao}",
                         Pontos = dataResponse
                     });
                 }
@@ -213,6 +213,53 @@ namespace WebApiGintec.Application.Usuario
             catch (Exception ex)
             {
                 return new GenericResponse<List<Repository.Tables.Usuario>>()
+                {
+                    mensagem = "failed",
+                    response = null,
+                    error = ex
+                };
+            }
+        }
+        public GenericResponse<List<Repository.Tables.Usuario>> ObterTodosOsUsuariosPorSala(int codigo)
+        {
+            try
+            {
+                var response = new GenericResponse<List<Repository.Tables.Usuario>>()
+                {
+                    mensagem = "success",
+                    response = _context.Usuarios.Include(x => x.Sala).Include(c => c.StatusUsuario).Where(y => y.SalaCodigo == codigo).ToList()
+                };
+                return response;
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<List<Repository.Tables.Usuario>>()
+                {
+                    mensagem = "failed",
+                    response = null,
+                    error = ex
+                };
+            }
+        }
+
+        public GenericResponse<Repository.Tables.Usuario> ObterUsuarioPorCodigo(int codigo)
+        {
+            try
+            {
+                var response = new GenericResponse<Repository.Tables.Usuario>()
+                {
+                    mensagem = "success",
+                    response = _context.Usuarios.Include(x => x.Sala)
+                    .Include(c => c.StatusUsuario)
+                    .Include(c => c.AtividadeCampeonatoRealizada)
+                    .ThenInclude(u => u.AtividadePontuacaoExtra)
+                    .FirstOrDefault(y => y.Codigo== codigo)
+                };
+                return response;
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<Repository.Tables.Usuario>()
                 {
                     mensagem = "failed",
                     response = null,

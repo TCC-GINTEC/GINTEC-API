@@ -29,6 +29,19 @@ namespace WebApiGintec.Controllers
             else
                 return BadRequest();
         }
+        [HttpGet]
+        [Route("{id}")]
+        [Authorize]
+        public IActionResult ObterSalasPorCodigo([FromRoute] int id)
+        {
+            var sala = new SalaService(_context);
+            var response = sala.ObterSalaPorCodigo(id);
+
+            if (response.mensagem == "success")
+                return Ok(response.response);
+            else
+                return BadRequest();
+        }
         [HttpPost]
         [Authorize]
         [Route("Ranking")]

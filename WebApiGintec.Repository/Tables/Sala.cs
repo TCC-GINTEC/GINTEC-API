@@ -12,5 +12,7 @@ namespace WebApiGintec.Repository.Tables
         [Required]
         [StringLength(50)]
         public string Descricao { get; set; }
+        [Required]        
+        public int Serie { get; set; }
     }
 }

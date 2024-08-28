@@ -10,11 +10,11 @@ namespace WebApiGintec.Controllers
     [ApiController]
     [Route("[controller]")]
     public class AuthController : ControllerBase
-    {        
+    {
         private readonly GintecContext _context;
 
         public AuthController(GintecContext context)
-        {            
+        {
             _context = context;
         }
 
@@ -29,6 +29,6 @@ namespace WebApiGintec.Controllers
                 return Unauthorized();
             else
                 return BadRequest();
-        }       
+        }
     }
 }

@@ -17,6 +17,10 @@ namespace WebApiGintec.Repository
         public DbSet<CampeonatoFase> Fases { get; set; }
         public DbSet<CampeonatoJogo> Jogos { get; set; }
         public DbSet<CampeonatoResultado> Resultados { get; set; }
+        public DbSet<Calendario> Calendario { get; set; }
+        public DbSet<CampeonatoJogador> CampeonatoJogador { get; set; }
+        public DbSet<OficinaHorarioFuncionamento> OficinaHorarioFuncionamento { get; set; }
+        public DbSet<Oficina> Oficina { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -26,10 +30,14 @@ namespace WebApiGintec.Repository
             modelBuilder.Entity<Atividade>().ToTable("tabAtividade");
             modelBuilder.Entity<AtividadePontuacaoExtra>().ToTable("tabAtividadePontuacaoExtra");
             modelBuilder.Entity<AtividadeCampeonatoRealizada>().ToTable("tabAtividadeCampeonatoRealizada");
-            modelBuilder.Entity<Campeonato>().ToTable("tabCampeonato");            
-            modelBuilder.Entity<CampeonatoFase>().ToTable("tabCampeonatoFase");            
+            modelBuilder.Entity<Campeonato>().ToTable("tabCampeonato");
+            modelBuilder.Entity<CampeonatoFase>().ToTable("tabCampeonatoFase");
             modelBuilder.Entity<CampeonatoJogo>().ToTable("tabCampeonatoJogo");            
             modelBuilder.Entity<CampeonatoResultado>().ToTable("tabCampeonatoResultado");            
+            modelBuilder.Entity<Calendario>().ToTable("tabCalendario");            
+            modelBuilder.Entity<CampeonatoJogador>().ToTable("tabCampeonatoJogadores");            
+            modelBuilder.Entity<OficinaHorarioFuncionamento>().ToTable("tabOficinaHorariosFuncionamento");            
+            modelBuilder.Entity<Oficina>().ToTable("tabOficinas");            
         }
 
     }

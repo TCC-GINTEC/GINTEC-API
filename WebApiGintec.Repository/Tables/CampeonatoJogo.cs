@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -13,24 +14,27 @@ namespace WebApiGintec.Repository.Tables
         [Required]
         public int FaseCodigo { get; set; }
 
-        [ForeignKey("FaseCodigo")]
-        public CampeonatoFase Fase { get; set; }
-
         [Required]
         public int Sala1Codigo { get; set; }
-
-        [ForeignKey("Sala1Codigo")]
-        public Sala Sala1 { get; set; }
 
         [Required]
         public int Sala2Codigo { get; set; }
 
+        [Required]
+        public DateTime DataJogo { get; set; }
+        public int? TimeCodigo1 { get; set; }  
+        public int? TimeCodigo2 { get; set; }  
+
+        [ForeignKey("Sala1Codigo")]
+        public Sala Sala1 { get; set; }
+
+        [ForeignKey("FaseCodigo")]
+        public CampeonatoFase Fase { get; set; }
+
         [ForeignKey("Sala2Codigo")]
         public Sala Sala2 { get; set; }
 
-        [Required]
-        public DateTime DataJogo { get; set; }
-
         public List<CampeonatoResultado> Resultados { get; set; }
+        public List<AtividadeCampeonatoRealizada> AtividadeCampeonatoRealizada { get; set; }
     }
 }

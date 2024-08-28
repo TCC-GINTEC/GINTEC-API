@@ -42,6 +42,29 @@ namespace WebApiGintec.Application.Sala
                 };
             }
         }
+        public GenericResponse<Repository.Tables.Sala> ObterSalaPorCodigo(int codigo)
+        {
+            try
+            {
+                var salaDb = _context.Salas.FirstOrDefault(x => x.Codigo == codigo);
+
+                return new GenericResponse<Repository.Tables.Sala>()
+                {
+                    response = salaDb,
+                    mensagem = "success"
+                };
+
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<Repository.Tables.Sala>()
+                {
+                    error = ex,
+                    mensagem = "failed",
+                    response = null
+                };
+            }
+        }
         public GenericResponse<List<RankingSala>> ObterRanking()
         {
             try

@@ -73,13 +73,32 @@ namespace WebApiGintec.Controllers
         [Authorize]
         [Route("MarcarPontos")]
         public IActionResult MarcarPontuação([FromBody] AtividadeCampeonatoRealizadaRequest request)
-        {            
+        {
+            var identidade = (ClaimsIdentity)HttpContext.User.Identity;
+            var usuarioCodigo = identidade.FindFirst("usuarioCodigo").Value;           
             var atividadeService = new AtividadeService(_context);            
-            var response = atividadeService.MarcarPontos(request);
+            var response = atividadeService.MarcarPontos(request, Convert.ToInt32(usuarioCodigo));
             if (response.mensagem == "success")
                 return Ok(response.response);
             else if (response.mensagem == "Score already marked")
                 return BadRequest(new {error = "Você já jogou este jogo/campeonato"});
+            else
+                return BadRequest();            
+        }[HttpPost]
+        [Authorize]
+        [Route("MarcarPontos2")]
+        public IActionResult MarcarPontuação2([FromBody] AtividadeCampeonatoRealizadaRequest request)
+        {
+            var identidade = (ClaimsIdentity)HttpContext.User.Identity;
+            var usuarioCodigo = identidade.FindFirst("usuarioCodigo").Value;
+            var atividadeService = new AtividadeService(_context);            
+            var response = atividadeService.MarcarPontos2(request,Convert.ToInt32(usuarioCodigo));
+            if (response.mensagem == "success")
+                return Ok(response.response);
+            else if (response.mensagem == "Score already marked")
+                return BadRequest(new {error = "Você já jogou este jogo/campeonato"});
+            else if (response.mensagem == "user not found")
+                return BadRequest(new {error = "Usuario não encontrado"});
             else
                 return BadRequest();            
         }
