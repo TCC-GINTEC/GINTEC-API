@@ -21,6 +21,7 @@ namespace WebApiGintec.Repository
         public DbSet<CampeonatoJogador> CampeonatoJogador { get; set; }
         public DbSet<OficinaHorarioFuncionamento> OficinaHorarioFuncionamento { get; set; }
         public DbSet<Oficina> Oficina { get; set; }
+        public DbSet<Notificacao> Notificacao { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -38,6 +39,7 @@ namespace WebApiGintec.Repository
             modelBuilder.Entity<CampeonatoJogador>().ToTable("tabCampeonatoJogadores");            
             modelBuilder.Entity<OficinaHorarioFuncionamento>().ToTable("tabOficinaHorariosFuncionamento");            
             modelBuilder.Entity<Oficina>().ToTable("tabOficinas");            
+            modelBuilder.Entity<Notificacao>().ToTable("tabnotificacoes");            
         }
 
     }

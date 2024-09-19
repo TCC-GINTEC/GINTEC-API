@@ -259,8 +259,5 @@ namespace WebApiGintec.Application.Campeonato
                 };
             }
         }
-
-
-
     }
 }

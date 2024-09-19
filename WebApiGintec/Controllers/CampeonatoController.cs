@@ -26,9 +26,8 @@ namespace WebApiGintec.Controllers
         {
             var response = _campeonatoService.ObterCampeonatos();
             return response.mensagem == "success" ? Ok(response.response) : BadRequest();
-        }
-
-        [HttpGet("{codigo}")]        
+        }      
+        [HttpGet("{codigo}")]
         [Authorize]
         public IActionResult ObterCampeonato(int codigo)
         {
@@ -47,7 +46,7 @@ namespace WebApiGintec.Controllers
         [HttpPut("{codigo}")]
         [Authorize]
         public IActionResult AtualizarCampeonato(int codigo, [FromBody] CampeonatoRequest campeonato)
-        {           
+        {
             var response = _campeonatoService.AtualizarCampeonato(codigo, campeonato);
             return response.mensagem == "success" ? Ok(response.response) : BadRequest(response);
         }
@@ -66,6 +65,6 @@ namespace WebApiGintec.Controllers
         {
             var response = _campeonatoService.IniciarCampeonato(request);
             return response.mensagem == "success" ? (response.response ? NoContent() : BadRequest(new { error = "Campeonato não encontrado" })) : BadRequest(response);
-        }        
+        }
     }
 }
