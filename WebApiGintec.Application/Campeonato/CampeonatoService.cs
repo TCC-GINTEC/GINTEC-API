@@ -139,6 +139,42 @@ namespace WebApiGintec.Application.Campeonato
                 };
             }
         }
+        public GenericResponse<Repository.Tables.Campeonato> ObterCampeonatoFeito(int codigoCampeonato, int usuarioCodigo)
+        {
+            try
+            {
+                var campeonato = _context.Campeonatos
+                            .Include(c => c.Fases)
+                            .ThenInclude(f => f.Jogos)
+                            .ThenInclude(j => j.AtividadeCampeonatoRealizada)
+                            .FirstOrDefault(c => c.Codigo == codigoCampeonato && 
+                            c.Fases.Any(x =>
+                            x.Jogos.Any(n => 
+                            n.AtividadeCampeonatoRealizada.Any(x => x.UsuarioCodigo == usuarioCodigo))));
+
+                if (campeonato == null)
+                {
+                    return new GenericResponse<Repository.Tables.Campeonato>
+                    {
+                        mensagem = "not found"
+                    };
+                }
+
+                return new GenericResponse<Repository.Tables.Campeonato>
+                {
+                    mensagem = "success",
+                    response = campeonato
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<Repository.Tables.Campeonato>
+                {
+                    mensagem = "failed",
+                    error = ex
+                };
+            }
+        }
 
         public GenericResponse<List<Repository.Tables.Campeonato>> ObterCampeonatos()
         {

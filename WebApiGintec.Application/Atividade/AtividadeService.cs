@@ -44,6 +44,27 @@ namespace WebApiGintec.Application.Atividade
                 };
             }
         }
+        public GenericResponse<Repository.Tables.Atividade> ObterAtividadePorCodiog(int codigo  )
+        {
+            try
+            {
+                var response = new GenericResponse<Repository.Tables.Atividade>()
+                {
+                    mensagem = "success",
+                    response = _context.Atividades.Include(x => x.Sala).Include(c => c.AtividadePontuacaoExtra).FirstOrDefault(x => x.Codigo == codigo)
+                };
+                return response;
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<Repository.Tables.Atividade>()
+                {
+                    mensagem = "failed",
+                    response = null,
+                    error = ex
+                };
+            }
+        }
         public GenericResponse<Repository.Tables.Atividade> InserirAtividade(AtividadeRequest request)
         {
             try

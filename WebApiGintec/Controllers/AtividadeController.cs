@@ -29,6 +29,18 @@ namespace WebApiGintec.Controllers
             else
                 return BadRequest();
         }
+        [HttpGet]
+        [Authorize]
+        [Route("{id}")]
+        public IActionResult ObterAtividadePorCodiog([FromRoute]int id)
+        {
+            var atividaadeService = new AtividadeService(_context);
+            var response = atividaadeService.ObterAtividadePorCodiog(id);
+            if (response.mensagem == "success")
+                return Ok(response.response);
+            else
+                return BadRequest();
+        }
         [HttpPost]
         [Authorize]
         public IActionResult InserirAtividade([FromBody] AtividadeRequest request)

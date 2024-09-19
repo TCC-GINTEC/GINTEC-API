@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Security.Claims;
+using WebApiGintec.Application.Atividade;
 using WebApiGintec.Application.Campeonato;
 using WebApiGintec.Application.Campeonato.Models;
 using WebApiGintec.Repository;
@@ -34,7 +36,15 @@ namespace WebApiGintec.Controllers
             var response = _campeonatoService.ObterCampeonatoPorCodigo(codigo);
             return response.mensagem == "success" ? Ok(response.response) : BadRequest(response);
         }
-
+        [HttpGet("feito/{codigo}")]
+        [Authorize]
+        public IActionResult ObterCampeonatoFeito(int codigo)
+        {            
+            var identidade = (ClaimsIdentity)HttpContext.User.Identity;
+            var usuarioCodigo = identidade.FindFirst("usuarioCodigo").Value;
+            var response = _campeonatoService.ObterCampeonatoFeito(codigo, Convert.ToInt32(usuarioCodigo));
+            return response.mensagem == "success" ? Ok(response.response) : BadRequest(response);
+        }
         [HttpPost]
         [Authorize]
         public IActionResult CriarCampeonato([FromBody] Campeonato campeonato)
