@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -44,7 +45,7 @@ namespace WebApiGintec.Application.Atividade
                 };
             }
         }
-        public GenericResponse<Repository.Tables.Atividade> ObterAtividadePorCodiog(int codigo  )
+        public GenericResponse<Repository.Tables.Atividade> ObterAtividadePorCodiog(int codigo)
         {
             try
             {
@@ -157,26 +158,97 @@ namespace WebApiGintec.Application.Atividade
             {
                 var usuario = new QRCodeService().DesencriptarQRCode(request.token);
                 var usuarioDb = _context.Usuarios.FirstOrDefault(x => x.Codigo == usuario.UsuarioCodigo && x.Email == usuario.Email);
-                var ajudanteDb = _context.Usuarios.FirstOrDefault(x => x.Codigo == usuarioAjudanteCodigo && (x.AtividadeCodigo != null || x.CampeonatoCodigo != null));
+                var ajudanteDb = _context.Usuarios.FirstOrDefault(x => x.Codigo == usuarioAjudanteCodigo && (x.AtividadeCodigo != null || x.CampeonatoCodigo != null || x.oficinacodigo != null));
+                var activityPerformed = new AtividadeCampeonatoRealizada();
                 if (usuarioDb == null)
                     return new GenericResponse<AtividadeCampeonatoRealizada>()
                     {
                         mensagem = "user not found",
                         response = null
                     };
-                if (_context.AtividadesCampeonatoRealizadas.Any(x => x.UsuarioCodigo == usuarioDb.Codigo &&
-                ((x.AtividadeCodigo ?? 0) == ajudanteDb.AtividadeCodigo || (x.CampeonatoCodigo ?? 0) == ajudanteDb.CampeonatoCodigo)))
-                    return new GenericResponse<AtividadeCampeonatoRealizada>() { mensagem = "Score already marked", response = null };
-
-                var activityPerformed = new AtividadeCampeonatoRealizada();
                 if (ajudanteDb.CampeonatoCodigo != null)
+                {
+                    if (!_context.CampeonatoJogador.Any(x => x.CampeonatoCodigo == ajudanteDb.CampeonatoCodigo && x.UsuarioCodigo == usuarioDb.Codigo))
+                    {
+                        return new GenericResponse<AtividadeCampeonatoRealizada>()
+                        {
+                            mensagem = "Player not found in championship"
+                        };
+                    }
+                    var fasesCampeonato = _context.Fases.Where(x => x.CampeonatoCodigo == ajudanteDb.CampeonatoCodigo).ToList();
+                    var fasesCodigo = fasesCampeonato.Select(y => y.Codigo).ToList();
+
+                    var phasesDone = _context.AtividadesCampeonatoRealizadas.Where(x => x.UsuarioCodigo == usuarioDb.Codigo && fasesCodigo.Contains(x.CampeonatoCodigo ?? 0)).ToList();
+
+                    var jogppints = phasesDone.Sum(o => o.CampeonatoCodigo);
+
+                    if (jogppints == fasesCodigo.Sum())
+                        return new GenericResponse<AtividadeCampeonatoRealizada>() { mensagem = "Score already marked", response = null };
+
+                    var fasequevaisermarcada = fasesCampeonato.Where(u => !phasesDone.Any(i => i.CampeonatoCodigo == u.Codigo)).OrderBy(x => x.Codigo).First();
+
                     activityPerformed = _context.AtividadesCampeonatoRealizadas.Add(new AtividadeCampeonatoRealizada
                     {
-                        CampeonatoCodigo = ajudanteDb.CampeonatoCodigo,
+                        CampeonatoCodigo = fasequevaisermarcada.Codigo,
                         UsuarioCodigo = usuarioDb.Codigo,
                         dataCad = DateTime.Now
                     }).Entity;
-                else
+                }
+                else if (ajudanteDb.oficinacodigo != null)
+                {
+                    if (_context.AtividadesCampeonatoRealizadas.Any(x => x.OficinaCodigo == ajudanteDb.oficinacodigo && usuarioDb.Codigo == x.UsuarioCodigo))
+                        return new GenericResponse<AtividadeCampeonatoRealizada>() { mensagem = "Score already marked", response = null };
+                    _context.AtividadesCampeonatoRealizadas.Add(new AtividadeCampeonatoRealizada()
+                    {
+                        OficinaCodigo = ajudanteDb.oficinacodigo,
+                        UsuarioCodigo = usuarioDb.Codigo,
+                        dataCad = DateTime.Now,
+                        Oficinahorariocodigo = request.OficinaHorarioCodigo
+                    });
+                    _context.SaveChanges();
+                }
+                else if (ajudanteDb.AtividadeCodigo != null)
+                {
+                    var dateNow = DateTime.Now;
+
+                    if (_context.Atividades
+                  .Any(x => x.Codigo == ajudanteDb.AtividadeCodigo &&
+                  x.Calendario.DataGincana.Date != dateNow.Date))
+                    {
+                        return new GenericResponse<AtividadeCampeonatoRealizada>()
+                        {
+                            mensagem = "Activity cannot be scheduled on this day"
+                        };
+                    }
+                    if (_context.AtividadesCampeonatoRealizadas.Any(x => x.AtividadeCodigo == ajudanteDb.AtividadeCodigo && usuarioDb.Codigo == x.UsuarioCodigo))
+                    {
+                        var atts = _context.Atividades.ToList();
+                        var att = atts.FirstOrDefault(x => x.Codigo == ajudanteDb.AtividadeCodigo);
+                        var repos = _context.ReposicaoUsuario.Where(x => x.UsuarioCodigo == usuarioDb.Codigo).ToList();
+
+                        foreach (var repo in repos)
+                        {
+                            var attrepo = atts.FirstOrDefault(x => x.Descricao == att.Descricao && x.CalendarioCodigo == repo.CalendarioCodigo);
+
+                            if (!_context.AtividadesCampeonatoRealizadas.Any(x => x.AtividadeCodigo == attrepo.Codigo && usuarioDb.Codigo == x.UsuarioCodigo))
+                            {
+                                activityPerformed = _context.AtividadesCampeonatoRealizadas.Add(new AtividadeCampeonatoRealizada
+                                {
+                                    AtividadeCodigo = attrepo.Codigo,
+                                    UsuarioCodigo = usuarioDb.Codigo,
+                                    dataCad = DateTime.Now
+                                }).Entity;
+
+                                _context.SaveChanges();
+                                return new GenericResponse<AtividadeCampeonatoRealizada>()
+                                {
+                                    mensagem = "success",
+                                    response = activityPerformed
+                                };
+                            }
+                        }
+                        return new GenericResponse<AtividadeCampeonatoRealizada>() { mensagem = "Score already marked", response = null };
+                    }
                     activityPerformed = _context.AtividadesCampeonatoRealizadas.Add(new AtividadeCampeonatoRealizada
                     {
                         AtividadeCodigo = ajudanteDb.AtividadeCodigo,
@@ -184,6 +256,7 @@ namespace WebApiGintec.Application.Atividade
                         UsuarioCodigo = usuarioDb.Codigo,
                         dataCad = DateTime.Now
                     }).Entity;
+                }
 
                 _context.SaveChanges();
                 return new GenericResponse<AtividadeCampeonatoRealizada>()
@@ -208,8 +281,8 @@ namespace WebApiGintec.Application.Atividade
         {
             try
             {
-                var usuarioDb = _context.Usuarios.FirstOrDefault(x => x.RM == request.token );
-                if(usuarioDb == null)
+                var usuarioDb = _context.Usuarios.FirstOrDefault(x => x.RM == request.token);
+                if (usuarioDb == null)
                     return new GenericResponse<AtividadeCampeonatoRealizada>() { mensagem = "user not found", response = null };
                 var ajudanteDb = _context.Usuarios.FirstOrDefault(x => x.Codigo == usuarioCodigo && (x.AtividadeCodigo != null || x.CampeonatoCodigo != null));
                 if (_context.AtividadesCampeonatoRealizadas.Any(x => x.UsuarioCodigo == usuarioDb.Codigo &&
@@ -332,8 +405,13 @@ namespace WebApiGintec.Application.Atividade
         {
             try
             {
-                var lstattFeitas = _context.AtividadesCampeonatoRealizadas.Where(x => x.UsuarioCodigo == usuarioCodigo && x.AtividadeCodigo != null).ToList();
-                var lstatt = _context.Atividades.Include(x => x.Sala).Include(c => c.AtividadePontuacaoExtra).ToList();
+                var lstattFeitas = _context.AtividadesCampeonatoRealizadas.Include(x => x.AtividadePontuacaoExtra).Where(x => x.UsuarioCodigo == usuarioCodigo && x.AtividadeCodigo != null).ToList();
+                var dateNow = DateTime.Now;
+                var lstatt = _context.Atividades.Include(x => x.Sala).Include(c => c.AtividadePontuacaoExtra).Include(i => i.Calendario)
+                    .Where(x => x.Calendario.DataGincana.Year == dateNow.Year &&
+                    x.Calendario.DataGincana.Month == dateNow.Month &&
+                    x.Calendario.DataGincana.Day == dateNow.Day)
+                    .ToList();
                 List<AtividadesFeitasResponse> responseBody = new();
                 foreach (var item in lstatt)
                 {
@@ -345,7 +423,8 @@ namespace WebApiGintec.Application.Atividade
                         IsPontuacaoExtra = item.IsPontuacaoExtra,
                         Sala = item.Sala,
                         SalaCodigo = item.SalaCodigo,
-                        isRealizada = lstattFeitas.Any(x => x.AtividadeCodigo == item.Codigo)
+                        isRealizada = lstattFeitas.Any(x => x.AtividadeCodigo == item.Codigo),
+                        pontuacaoExtra = lstattFeitas.FirstOrDefault(x => x.AtividadeCodigo == item.Codigo && x.AtividadePontuacaoExtraCodigo != null)?.AtividadePontuacaoExtra.Pontuacao
                     });
                 }
 

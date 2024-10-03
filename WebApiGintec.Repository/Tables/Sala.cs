@@ -14,5 +14,6 @@ namespace WebApiGintec.Repository.Tables
         public string Descricao { get; set; }
         [Required]        
         public int Serie { get; set; }
+        public string? FotoSala { get; set; }
     }
 }

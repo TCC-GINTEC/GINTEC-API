@@ -10,5 +10,6 @@ namespace WebApiGintec.Application.Campeonato.Models
     {
         public bool isRealizada { get; set; }
         public int? OficinaHorarioFuncionamentoCodigo { get; set; }
+        public DateTime Data { get; set; }
     }
 }

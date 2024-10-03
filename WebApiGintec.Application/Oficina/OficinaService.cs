@@ -18,25 +18,85 @@ namespace WebApiGintec.Application.Oficina
             _context = context;
         }
 
-        public GenericResponse<List<OficinaFeitasResponse>> ObterOficinas(int usuarioCodigo)
+        public GenericResponse<List<Repository.Tables.Oficina>> ObterOficinas()
         {
             try
             {
-                var lstOficina = _context.Oficina.Include(x => x.HorariosFuncionamento).ToList();
+                return new GenericResponse<List<Repository.Tables.Oficina>>()
+                {
+                    response = _context.Oficina.Include(x => x.HorariosFuncionamento).Include(x => x.Calendario).Where(x => x.Calendario.DataGincana.Date >= DateTime.Now.Date).ToList(),
+                    mensagem = "success"
+                }; 
+            }
+            catch (Exception ex)
+            {
 
+                return new GenericResponse<List<Repository.Tables.Oficina>>() 
+                { 
+                    mensagem = "failed",
+                    error = ex
+                };
+            }
+        }
+        public GenericResponse<Repository.Tables.Oficina> ObterOficinaPorCodigo(int id)
+        {
+            try
+            {
+                return new GenericResponse<Repository.Tables.Oficina>()
+                {
+                    response = _context.Oficina.Include(x => x.HorariosFuncionamento).FirstOrDefault(x => x.Codigo == id),
+                    mensagem = "success"
+                }; 
+            }
+            catch (Exception ex)
+            {
+
+                return new GenericResponse<Repository.Tables.Oficina>()
+                { 
+                    mensagem = "failed",
+                    error = ex
+                };
+            }
+        }
+        public GenericResponse<Repository.Tables.AtividadeCampeonatoRealizada> ObterOficinaFeitaPorCodigo(int id, int usuariocodigo)
+        {
+            try
+            {
+                return new GenericResponse<Repository.Tables.AtividadeCampeonatoRealizada>()
+                {
+                    response = _context.AtividadesCampeonatoRealizadas.FirstOrDefault(x => x.UsuarioCodigo == usuariocodigo && x.OficinaCodigo == id),
+                    mensagem = "success"
+                }; 
+            }
+            catch (Exception ex)
+            {
+
+                return new GenericResponse<Repository.Tables.AtividadeCampeonatoRealizada>()
+                { 
+                    mensagem = "failed",
+                    error = ex
+                };
+            }
+        }
+
+        public GenericResponse<List<OficinaFeitasResponse>> ObterOficinasFeitos(int usuarioCodigo)
+        {
+            try
+            {
+                var lstOficina = _context.Oficina.Include(x => x.HorariosFuncionamento).Include(x => x.Calendario).ToList();
                 var lstResponse = new List<OficinaFeitasResponse>();
                 var oficinasfeitas = _context.AtividadesCampeonatoRealizadas.Where(x => x.OficinaCodigo != null && x.UsuarioCodigo == usuarioCodigo).ToList();
                 foreach (var oficina in lstOficina)
                 {
                     lstResponse.Add(new OficinaFeitasResponse()
                     {
-                        Codigo =oficina.Codigo,
-                        Data = oficina.Data,
+                        Codigo = oficina.Codigo,
+                        Data = oficina.Calendario.DataGincana,
                         Descricao = oficina.Descricao,
-                        HorariosFuncionamento = oficina.HorariosFuncionamento,                        
+                        HorariosFuncionamento = oficina.HorariosFuncionamento,
                         SalaCodigo = oficina.SalaCodigo,
-                        isRealizada = oficinasfeitas.Any(x => x.OficinaHorario.OficinaCodigo  == oficina.Codigo),
-                        OficinaHorarioFuncionamentoCodigo = oficinasfeitas.FirstOrDefault(x => x.OficinaHorario.OficinaCodigo == oficina.Codigo)?.Codigo,
+                        isRealizada = oficinasfeitas.Any(x => x.Oficinahorario.OficinaCodigo == oficina.Codigo),
+                        OficinaHorarioFuncionamentoCodigo = oficinasfeitas.FirstOrDefault(x => x.Oficinahorario.OficinaCodigo == oficina.Codigo)?.Codigo,
                     });
                 }
                 return new GenericResponse<List<OficinaFeitasResponse>>()

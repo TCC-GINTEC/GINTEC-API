@@ -20,5 +20,6 @@ namespace WebApiGintec.Repository.Tables
         public Campeonato Campeonato { get; set; }
 
         public List<CampeonatoJogo> Jogos { get; set; }
+        public List<AtividadeCampeonatoRealizada>? atividadeCampeonatoRealizadas { get; set; }
     }
 }

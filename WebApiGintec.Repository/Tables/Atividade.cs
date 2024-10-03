@@ -15,11 +15,14 @@ namespace WebApiGintec.Repository.Tables
 
         [Required]
         public bool IsPontuacaoExtra { get; set; }
-        
-        public int? SalaCodigo { get; set; }
 
+        public int? SalaCodigo { get; set; }
+        [Required]
+        public int CalendarioCodigo { get; set; }
+        [ForeignKey("CalendarioCodigo")]
+        public Calendario Calendario { get; set; }
         [ForeignKey("SalaCodigo")]
-        public Sala? Sala { get; set; }        
+        public Sala? Sala { get; set; }
         public List<AtividadePontuacaoExtra>? AtividadePontuacaoExtra { get; set; }
     }
 }

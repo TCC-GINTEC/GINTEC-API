@@ -20,5 +20,6 @@ namespace WebApiGintec.Application.Usuario.Models
         public bool IsPadrinho { get; set; }
         public int? AtividadeCodigo { get; set; }
         public int? CampeonatoCodigo { get; set; }
+        public string? fotoPerfil { get; set; }
     }
 }

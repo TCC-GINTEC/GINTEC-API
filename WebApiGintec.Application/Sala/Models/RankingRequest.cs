@@ -8,7 +8,7 @@ namespace WebApiGintec.Application.Sala.Models
 {
     public class RankingRequest
     {
-        public DateTime FiltroData { get; set; }
+        public DateTime FiltroData { get; set; }    
         public bool IsPadrinho { get; set; }
     }
 }

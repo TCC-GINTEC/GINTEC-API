@@ -1,3 +1,4 @@
+using Amazon.S3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -38,6 +39,7 @@ builder.Services.AddAuthentication
 builder.Services.AddAuthorization();
 
 builder.Services.AddDbContext<GintecContext>(options => options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).UseMySQL(builder.Configuration.GetConnectionString("Gintec-Release")));
+
 
 var app = builder.Build();
 

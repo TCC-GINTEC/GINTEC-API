@@ -16,17 +16,20 @@ namespace WebApiGintec.Repository.Tables
         public int? CampeonatoCodigo { get; set; }
         public int? OficinaCodigo { get; set; }
         public int? AtividadePontuacaoExtraCodigo { get; set; }
+        public int? Oficinahorariocodigo { get; set; }
         [Required]
         public DateTime dataCad { get; set; }
-        [ForeignKey("UsuarioCodigo ")]
+        [ForeignKey("UsuarioCodigo")]
         public Usuario Usuario { get; set; }
-        [ForeignKey("AtividadePontuacaoExtraCodigo ")]
+        [ForeignKey("Oficinahorariocodigo")]
+        public OficinaHorarioFuncionamento Oficinahorario { get; set; }
+        [ForeignKey("AtividadePontuacaoExtraCodigo")]
         public AtividadePontuacaoExtra? AtividadePontuacaoExtra { get; set; }
-        [ForeignKey("CampeonatoCodigo ")]
-        public CampeonatoJogo? CampeonatoJogo { get; set; }
+        [ForeignKey("CampeonatoCodigo")]
+        public CampeonatoFase? CampeonatoFase { get; set; }
         [ForeignKey("AtividadeCodigo")]
         public Atividade? Atividade { get; set; }
         [ForeignKey("OficinaCodigo")]
-        public OficinaHorarioFuncionamento? OficinaHorario { get; set; }
+        public Oficina? Oficina { get; set; }
     }
 }

@@ -1,30 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace WebApiGintec.Repository.Tables
 {
-    public class Oficina
+    public class ReposicaoUsuario
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Codigo { get; set; }
         [Required]
-        public string Descricao { get; set; }
-        [Required]
-        public int SalaCodigo { get; set; }
+        public int UsuarioCodigo { get; set; }
         [Required]
         public int CalendarioCodigo { get; set; }
-        [ForeignKey("SalaCodigo")]
-        public Sala Sala { get; set; }
+        [ForeignKey("UsuarioCodigo")]
+        public Usuario Usuario { get; set; }
         [ForeignKey("CalendarioCodigo")]
         public Calendario Calendario { get; set; }
-        public List<OficinaHorarioFuncionamento>? HorariosFuncionamento { get; set; }
-        public List<AtividadeCampeonatoRealizada>? AtividadeCampeonatoRealizada { get; set; }
     }
-
 }

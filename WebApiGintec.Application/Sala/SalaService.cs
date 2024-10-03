@@ -25,6 +25,13 @@ namespace WebApiGintec.Application.Sala
             {
                 var salasDb = _context.Salas.ToList();
 
+                foreach (var sala in salasDb)
+                {
+                    if (!string.IsNullOrEmpty(sala.FotoSala))
+                    {
+                        sala.FotoSala = new S3Service("salafoto").GetUrlFile(sala.FotoSala, 6);
+                    }
+                }
                 return new GenericResponse<List<Repository.Tables.Sala>>()
                 {
                     response = salasDb,
@@ -47,6 +54,10 @@ namespace WebApiGintec.Application.Sala
             try
             {
                 var salaDb = _context.Salas.FirstOrDefault(x => x.Codigo == codigo);
+                if (!string.IsNullOrEmpty(salaDb.FotoSala))
+                {
+                    salaDb.FotoSala = new S3Service("salafoto").GetUrlFile(salaDb.FotoSala, 6);
+                }
 
                 return new GenericResponse<Repository.Tables.Sala>()
                 {
@@ -70,28 +81,82 @@ namespace WebApiGintec.Application.Sala
             try
             {
                 var lstRank = new List<RankingSala>();
-                var lstPontAlunos = _context.AtividadesCampeonatoRealizadas.Include(x => x.AtividadePontuacaoExtra).Include(x => x.Usuario).ToList();
+                
+                var lstPontAlunosAtt = (from acr in _context.AtividadesCampeonatoRealizadas
+                                        join ap in _context.AtividadesPontuacaoExtra on acr.AtividadePontuacaoExtraCodigo equals ap.Codigo into ap_join
+                                        from ap in ap_join.DefaultIfEmpty()
+                                        join u in _context.Usuarios on acr.UsuarioCodigo equals u.Codigo
+                                        join a in _context.Atividades on acr.AtividadeCodigo equals a.Codigo
+                                        join c in _context.Calendario on a.CalendarioCodigo equals c.Codigo
+                                        where c.isAtivo == true
+                                        select new
+                                        {
+                                            AtividadePontuacaoExtra = ap,
+                                            Usuario = u,
+                                            Atividade = a,
+                                            Calendario = c
+                                        }).ToList();
+                
+                var lstPontAlunosChamp = (from acr in _context.AtividadesCampeonatoRealizadas
+                                          join u in _context.Usuarios on acr.UsuarioCodigo equals u.Codigo
+                                          join fase in _context.Fases on acr.CampeonatoCodigo equals fase.Codigo
+                                          join camp in _context.Campeonatos on fase.CampeonatoCodigo equals camp.Codigo
+                                          join c in _context.Calendario on camp.CalendarioCodigo equals c.Codigo
+                                          where c.isAtivo == true
+                                          select new
+                                          {
+                                              Campeonato = camp,
+                                              Fase = fase,
+                                              Usuario = u,
+                                              Calendario = c
+                                          }).ToList();
+                
+                var pontosExtrasQVemDoNada = _context.AlunoPontuacao.Include(x => x.Usuario).ToList(); ;
 
-                foreach (var item in _context.Salas.ToList())
-                {
-                    var salaPontos = lstPontAlunos.Where(x => x.Usuario.SalaCodigo == item.Codigo).ToList();
-                    int pontosExtra = salaPontos.Where(x => x.AtividadePontuacaoExtraCodigo != null).Select(y => y.AtividadePontuacaoExtra.Pontuacao).Sum(u => u);
+                foreach (var sala in _context.Salas.ToList())
+                {                    
+                    if (sala.Descricao == "Não possui sala")
+                        continue;
+                    var salaPontos = lstPontAlunosAtt.Where(x => x.Usuario.SalaCodigo == sala.Codigo).ToList();
+                  
+                    int pontosExtra = salaPontos.Where(x => x.AtividadePontuacaoExtra != null)
+                                                .Select(y => y.AtividadePontuacaoExtra.Pontuacao)
+                                                .Sum();
+
+                    var pontosextraQVemDOnADAdAsALA = pontosExtrasQVemDoNada.Where(x => x.Usuario.SalaCodigo == sala.Codigo).Sum(u => u.Pontos);
+
+
+                    int pontuacaoAtividades = salaPontos.Count * 600;
+                    
+                    var salaFases = lstPontAlunosChamp.Where(x => x.Usuario.SalaCodigo == sala.Codigo).ToList();
+                    
+                    int pontuacaoFases = salaFases.Count * 350;
+
+                    // Verificando e obtendo a URL da foto da sala, caso exista
+                    if (!string.IsNullOrEmpty(sala.FotoSala))
+                    {
+                        sala.FotoSala = new S3Service("salafoto").GetUrlFile(sala.FotoSala, 6);
+                    }
+
                     lstRank.Add(new RankingSala()
                     {
-                        Codigo = item.Codigo,
-                        Descricao = item.Descricao,
-                        Pontuacao = salaPontos.Select(y => y.Codigo).Count() * 300 + pontosExtra
+                        Codigo = sala.Codigo,
+                        Descricao = $"{sala.Serie}° {sala.Descricao}",
+                        FotoSala = sala.FotoSala,
+                        Pontuacao = pontuacaoAtividades + pontuacaoFases + pontosExtra + pontosextraQVemDOnADAdAsALA // Soma das pontuações
                     });
                 }
+
+                // Retornando a resposta com o ranking ordenado pela pontuação
                 return new GenericResponse<List<RankingSala>>()
                 {
-                    response = lstRank,
+                    response = lstRank.OrderByDescending(x => x.Pontuacao).ToList(),
                     mensagem = "success"
                 };
-
             }
             catch (Exception ex)
             {
+                // Captura de exceção para retorno de erro
                 return new GenericResponse<List<RankingSala>>()
                 {
                     error = ex,
@@ -100,6 +165,7 @@ namespace WebApiGintec.Application.Sala
                 };
             }
         }
+
         public GenericResponse<List<RankingSala>> ObterRanking(RankingRequest request)
         {
             try
@@ -111,16 +177,21 @@ namespace WebApiGintec.Application.Sala
                 {
                     var salaPontos = lstPontAlunos.Where(x => x.Usuario.SalaCodigo == item.Codigo && x.Usuario.isPadrinho == request.IsPadrinho).ToList();
                     int pontosExtra = salaPontos.Where(x => x.AtividadePontuacaoExtraCodigo != null).Select(y => y.AtividadePontuacaoExtra.Pontuacao).Sum(u => u);
+                    if (!string.IsNullOrEmpty(item.FotoSala))
+                    {
+                        item.FotoSala = new S3Service("salafoto").GetUrlFile(item.FotoSala, 6);
+                    }
                     lstRank.Add(new RankingSala()
                     {
                         Codigo = item.Codigo,
-                        Descricao = item.Descricao,
-                        Pontuacao = salaPontos.Select(y => y.Codigo).Count() * 300 + pontosExtra
+                        Descricao = $"{item.Serie}° {item.Descricao}",
+                        FotoSala = item.FotoSala,
+                        Pontuacao = salaPontos.Select(y => y.Codigo).Count() * 600 + pontosExtra
                     });
                 }
                 return new GenericResponse<List<RankingSala>>()
                 {
-                    response = lstRank,
+                    response = lstRank.OrderByDescending(x => x.Pontuacao).ToList(),
                     mensagem = "success"
                 };
 

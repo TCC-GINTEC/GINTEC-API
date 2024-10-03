@@ -12,11 +12,14 @@ namespace WebApiGintec.Controllers
     public class SalaController : ControllerBase
     {
         private readonly GintecContext _context;
+        private readonly IConfiguration _configuration;       
 
-        public SalaController(GintecContext context)
+        public SalaController(IConfiguration configuration, GintecContext context)
         {
+            _configuration = configuration;
             _context = context;
         }
+
         [HttpGet]
         [Authorize]
         public IActionResult ObterTodasAsSalas()
@@ -47,13 +50,20 @@ namespace WebApiGintec.Controllers
         [Route("Ranking")]
         public IActionResult ObterRanking([FromBody] RankingRequest? request)
         {
+            var environmentVariable = _configuration["YourEnvironmentVariableName"];
+            if (!string.IsNullOrEmpty(environmentVariable))
+            {
+                // Retornar 401 se a variável tiver um valor específico
+                return Forbid();
+            }
+
             var sala = new SalaService(_context);
             GenericResponse<List<RankingSala>> response;
             if (request is null)
                 response = sala.ObterRanking();
             else
                 response = sala.ObterRanking(request);
-                
+            
             if (response.mensagem == "success")
                 return Ok(response.response);
             else

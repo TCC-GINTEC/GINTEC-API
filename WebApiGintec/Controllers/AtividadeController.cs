@@ -93,10 +93,16 @@ namespace WebApiGintec.Controllers
             if (response.mensagem == "success")
                 return Ok(response.response);
             else if (response.mensagem == "Score already marked")
-                return BadRequest(new {error = "Você já jogou este jogo/campeonato"});
+                return BadRequest(new { error = "Você já jogou este jogo/campeonato" });
+            else if (response.mensagem == "Activity cannot be scheduled on this day")
+                return BadRequest(new { error = "Atividade não é deste dia" });
+            else if (response.mensagem == "Player not found in championship")
+                return BadRequest(new { error = "Jogador não participa deste campeonato" });
+
             else
                 return BadRequest();            
-        }[HttpPost]
+        }
+        [HttpPost]
         [Authorize]
         [Route("MarcarPontos2")]
         public IActionResult MarcarPontuação2([FromBody] AtividadeCampeonatoRealizadaRequest request)

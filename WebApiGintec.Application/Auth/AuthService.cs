@@ -34,7 +34,8 @@ namespace WebApiGintec.Application.Auth
                             Token = GeraTokenJwt(user),
                             UsuarioCodigo = user.Codigo,
                             AtividadeCodigo = user.AtividadeCodigo,
-                            CampeonatoCodigo = user.CampeonatoCodigo
+                            CampeonatoCodigo = user.CampeonatoCodigo,
+                            OficinaCodigo = user.oficinacodigo                            
                         }
 
                     };

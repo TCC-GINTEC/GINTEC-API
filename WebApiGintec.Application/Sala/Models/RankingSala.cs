@@ -11,6 +11,7 @@ namespace WebApiGintec.Application.Sala.Models
     {
         public int Codigo { get; set; }
         public string Descricao { get; set; }
+        public string FotoSala { get; set; }
         public int Pontuacao { get; set; }
     }
 }

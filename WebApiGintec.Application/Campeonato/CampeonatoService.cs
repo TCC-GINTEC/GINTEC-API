@@ -112,8 +112,7 @@ namespace WebApiGintec.Application.Campeonato
             {
                 var campeonato = _context.Campeonatos
                             .Include(c => c.Fases)
-                            .ThenInclude(f => f.Jogos)
-                            .ThenInclude(j => j.AtividadeCampeonatoRealizada)
+                            .ThenInclude(y => y.atividadeCampeonatoRealizadas)
                             .FirstOrDefault(c => c.Codigo == codigoCampeonato);
 
                 if (campeonato == null)
@@ -139,36 +138,46 @@ namespace WebApiGintec.Application.Campeonato
                 };
             }
         }
-        public GenericResponse<Repository.Tables.Campeonato> ObterCampeonatoFeito(int codigoCampeonato, int usuarioCodigo)
+        public GenericResponse<List<CampeonatoFeitoResponse>> ObterCampeonatoFeito(int codigoCampeonato, int usuarioCodigo)
         {
             try
             {
-                var campeonato = _context.Campeonatos
-                            .Include(c => c.Fases)
-                            .ThenInclude(f => f.Jogos)
-                            .ThenInclude(j => j.AtividadeCampeonatoRealizada)
-                            .FirstOrDefault(c => c.Codigo == codigoCampeonato && 
-                            c.Fases.Any(x =>
-                            x.Jogos.Any(n => 
-                            n.AtividadeCampeonatoRealizada.Any(x => x.UsuarioCodigo == usuarioCodigo))));
 
-                if (campeonato == null)
+                var fasescampeonato = _context.Fases.Where(x => x.CampeonatoCodigo == codigoCampeonato).ToList();
+                if (fasescampeonato.Count == 0)
                 {
-                    return new GenericResponse<Repository.Tables.Campeonato>
+                    return new GenericResponse<List<CampeonatoFeitoResponse>>()
                     {
                         mensagem = "not found"
                     };
                 }
+                var fasesCodigo = fasescampeonato.Select(x => x.Codigo).ToList();
 
-                return new GenericResponse<Repository.Tables.Campeonato>
+                var fasesfeitas = _context.AtividadesCampeonatoRealizadas.Where(x => fasesCodigo.Contains(x.CampeonatoCodigo ?? 0)).ToList();
+
+                List<CampeonatoFeitoResponse> response = new List<CampeonatoFeitoResponse>();
+
+                foreach (var fase in fasescampeonato)
+                {
+                    var status = fasesfeitas.Any(x => x.CampeonatoCodigo == fase.Codigo) ? CampeonatoFeitoResponse.Status.Feito : CampeonatoFeitoResponse.Status.Pendente;
+                    response.Add(new CampeonatoFeitoResponse()
+                    {
+                        CampeonatoCodigo = fase.CampeonatoCodigo,
+                        Codigo = fase.Codigo,
+                        Descricao = fase.Descricao,
+                        Situacao = status
+                    });
+                }
+
+                return new GenericResponse<List<CampeonatoFeitoResponse>>()
                 {
                     mensagem = "success",
-                    response = campeonato
+                    response = response
                 };
             }
             catch (Exception ex)
             {
-                return new GenericResponse<Repository.Tables.Campeonato>
+                return new GenericResponse<List<CampeonatoFeitoResponse>>()
                 {
                     mensagem = "failed",
                     error = ex

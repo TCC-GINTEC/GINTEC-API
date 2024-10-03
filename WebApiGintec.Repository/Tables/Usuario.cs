@@ -27,15 +27,18 @@ namespace WebApiGintec.Repository.Tables
         [Required]
         [StringLength(100)]
         public string Senha { get; set; }
-
-        [Required]
-        public int SalaCodigo { get; set; }
+        
+        public int? SalaCodigo { get; set; }
 
         [Required]
         public bool isPadrinho { get; set; }
+        public string? fotoPerfil { get; set; }
+        public int? oficinacodigo { get; set; }
 
         [ForeignKey("SalaCodigo")]
-        public Sala Sala { get; set; }
+        public Sala? Sala { get; set; }
+        [ForeignKey("oficinacodigo")]
+        public Oficina? Oficina { get; set; }
 
         [ForeignKey("Status")]
         public StatusUsuario StatusUsuario { get; set; }
@@ -43,12 +46,12 @@ namespace WebApiGintec.Repository.Tables
         public int? AtividadeCodigo { get; set; }
 
         [ForeignKey("AtividadeCodigo")]
-        public Atividade Atividade { get; set; }
-
+        public Atividade? Atividade { get; set; }
+        
         public int? CampeonatoCodigo { get; set; }
 
         [ForeignKey("CampeonatoCodigo")]
-        public Campeonato Campeonato { get; set; }
-        public List<AtividadeCampeonatoRealizada> AtividadeCampeonatoRealizada { get; set; }
+        public Campeonato? Campeonato { get; set; }
+        public List<AtividadeCampeonatoRealizada>? AtividadeCampeonatoRealizada { get; set; }
     }
 }

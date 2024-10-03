@@ -8,16 +8,18 @@ using System.Threading.Tasks;
 
 namespace WebApiGintec.Repository.Tables
 {
-    public class OficinaHorarioFuncionamento
+    public class AlunoPontuacao
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Codigo { get; set; }        
-        public int? OficinaCodigo { get; set; }
+        public int Codigo { get; set; }
         [Required]
-        public string Horario { get; set; }
-        [ForeignKey("OficinaCodigo")]
-        public Oficina? Oficina { get; set; }
+        public int UsuarioCodigo { get; set; }
+        [Required]
+        public int Pontos { get; set; }
+        [Required]
+        public string Justificativa { get; set; }
+        [ForeignKey("UsuarioCodigo")]
+        public Usuario Usuario { get; set; }
     }
-
 }

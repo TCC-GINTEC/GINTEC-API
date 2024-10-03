@@ -9,5 +9,6 @@ namespace WebApiGintec.Application.Atividade.Models
     public class AtividadesFeitasResponse : Repository.Tables.Atividade
     {
         public bool isRealizada { get; set; }
+        public int? pontuacaoExtra { get; set; }
     }
 }

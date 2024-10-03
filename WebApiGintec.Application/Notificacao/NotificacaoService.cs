@@ -22,7 +22,7 @@ namespace WebApiGintec.Application.Notificacao
                 return new GenericResponse<List<Repository.Tables.Notificacao>>()
                 {
                     mensagem = "success",
-                    response = _context.Notificacao.OrderBy(x => x.DataCad).ToList()
+                    response = _context.Notificacao.OrderByDescending(x => x.DataCad).ToList()
                 };
             }
             catch(Exception ex)

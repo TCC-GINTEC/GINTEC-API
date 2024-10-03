@@ -20,7 +20,7 @@ namespace WebApiGintec.Controllers
         public IActionResult ObterNotificacoes()
         {            
             var response = _notificacaoService.ObterNotificacoes();
-            return response.mensagem == "success" ? Ok(response.response) : BadRequest();
+          return response.mensagem == "success" ? Ok(response.response) : BadRequest();
         }
     }
 }

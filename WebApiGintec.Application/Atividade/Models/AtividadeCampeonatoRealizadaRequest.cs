@@ -10,5 +10,6 @@ namespace WebApiGintec.Application.Atividade.Models
     {
         public string token { get; set; }        
         public int? AtividadePontuacaoExtraCodigo { get; set; }
+        public int? OficinaHorarioCodigo { get; set; }
     }
 }
