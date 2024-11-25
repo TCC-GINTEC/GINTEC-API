@@ -24,7 +24,7 @@ namespace WebApiGintec.Application.Oficina
             {
                 return new GenericResponse<List<Repository.Tables.Oficina>>()
                 {
-                    response = _context.Oficina.Include(x => x.HorariosFuncionamento).Include(x => x.Calendario).Where(x => x.Calendario.DataGincana.Date >= DateTime.Now.Date).ToList(),
+                    response = _context.Oficina.Include(x => x.Calendario).ToList(),
                     mensagem = "success"
                 }; 
             }

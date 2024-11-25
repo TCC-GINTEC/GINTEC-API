@@ -20,10 +20,11 @@ namespace WebApiGintec.Application.Auth
         public GenericResponse<LoginResponse> Autenticar(LoginRequest request)
         {
             try
-            {
-                var user = _context.Usuarios.FirstOrDefault(x => request.email == x.RM && request.password == x.Senha) ?? _context.Usuarios.FirstOrDefault(x => request.email == x.Email && request.password == x.Senha);
+            {                
+                var user = _context.Usuarios.FirstOrDefault(x => request.email == x.RM && x.Status != 2 && request.password == x.Senha) ?? _context.Usuarios.FirstOrDefault(x => request.email == x.Email && request.password == x.Senha && x.Status != 2);
                 if (user != null)
                 {                    
+
                     return new GenericResponse<LoginResponse>()
                     {
                         mensagem = "success",
@@ -31,7 +32,7 @@ namespace WebApiGintec.Application.Auth
                         {
                             Email = user.Email,
                             Status = user.Status,
-                            Token = GeraTokenJwt(user),
+                            Token = GeraTokenJwt(user),                            
                             UsuarioCodigo = user.Codigo,
                             AtividadeCodigo = user.AtividadeCodigo,
                             CampeonatoCodigo = user.CampeonatoCodigo,

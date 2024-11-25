@@ -74,7 +74,8 @@ namespace WebApiGintec.Application.Atividade
                 {
                     Descricao = request.Descricao,
                     IsPontuacaoExtra = request.IsPontuacaoExtra,
-                    SalaCodigo = request.SalaCodigo
+                    SalaCodigo = request.SalaCodigo,
+                    CalendarioCodigo = request.CalendarioCodigo
                 });
                 _context.SaveChanges();
 
@@ -131,11 +132,9 @@ namespace WebApiGintec.Application.Atividade
                 if (activity == null)
                     return new GenericResponse<bool> { mensagem = "success", response = false };
 
-                if (activity.IsPontuacaoExtra)
-                {
-                    var scores = _context.AtividadesPontuacaoExtra.Where(x => x.AtividadeCodigo == codigo);
-                    _context.AtividadesPontuacaoExtra.RemoveRange(scores);
-                }
+
+                var scores = _context.AtividadesPontuacaoExtra.Where(x => x.AtividadeCodigo == codigo);
+                _context.AtividadesPontuacaoExtra.RemoveRange(scores);
                 _context.Atividades.Remove(activity);
 
                 _context.SaveChanges();

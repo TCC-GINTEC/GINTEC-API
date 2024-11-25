@@ -19,7 +19,18 @@ namespace WebApiGintec.Controllers
             _configuration = configuration;
             _context = context;
         }
+        [HttpGet("ParticipacaoSalas")]
+        [Authorize]
+        public IActionResult ObterParticipacaoSalas()
+        {
+            var sala = new SalaService(_context);
+            var response = sala.ObterParticipacaoSalas();
 
+            if (response.mensagem == "success")
+                return Ok(response.response);
+            else
+                return BadRequest();
+        }
         [HttpGet]
         [Authorize]
         public IActionResult ObterTodasAsSalas()

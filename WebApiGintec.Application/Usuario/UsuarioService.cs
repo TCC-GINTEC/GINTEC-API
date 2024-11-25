@@ -43,8 +43,9 @@ namespace WebApiGintec.Application.Usuario
                     Senha = request.Senha,
                     Status = request.Status,
                     AtividadeCodigo = request.AtividadeCodigo,
-                    CampeonatoCodigo = request.CampeonatoCodigo,
-                    isPadrinho = request.IsPadrinho
+                    CampeonatoCodigo = request.CampeonatoCodigo,                    
+                    isPadrinho = request.IsPadrinho,
+                    oficinacodigo= request.OficinaCodigo,                    
 
                 });
                 _context.SaveChanges();
@@ -190,7 +191,7 @@ namespace WebApiGintec.Application.Usuario
             try
             {
                 var lstRank = new List<PontuacaoAluno>();
-                
+
                 var lstPontAlunosAtt = (from acr in _context.AtividadesCampeonatoRealizadas
                                         join ap in _context.AtividadesPontuacaoExtra on acr.AtividadePontuacaoExtraCodigo equals ap.Codigo into ap_join
                                         from ap in ap_join.DefaultIfEmpty()
@@ -205,7 +206,7 @@ namespace WebApiGintec.Application.Usuario
                                             Atividade = a,
                                             Calendario = c
                                         }).ToList();
-                
+
                 var lstPontAlunosChamp = (from acr in _context.AtividadesCampeonatoRealizadas
                                           join u in _context.Usuarios on acr.UsuarioCodigo equals u.Codigo
                                           join fase in _context.Fases on acr.CampeonatoCodigo equals fase.Codigo
@@ -219,11 +220,11 @@ namespace WebApiGintec.Application.Usuario
                                               Usuario = u,
                                               Calendario = c
                                           }).ToList();
-                
+
                 var pontosExtras = _context.AlunoPontuacao.Include(x => x.Usuario).ToList();
-                
+
                 foreach (var usuario in _context.Usuarios.Include(x => x.Sala).Where(x => x.isPadrinho == isPadrinho).ToList())
-                {                    
+                {
                     var alunoPontosAtt = lstPontAlunosAtt.Where(x => x.Usuario.Codigo == usuario.Codigo).ToList();
                     int pontosExtra = alunoPontosAtt.Where(x => x.AtividadePontuacaoExtra != null)
                                                     .Select(y => y.AtividadePontuacaoExtra.Pontuacao)
@@ -234,7 +235,7 @@ namespace WebApiGintec.Application.Usuario
 
                     var alunoFases = lstPontAlunosChamp.Where(x => x.Usuario.Codigo == usuario.Codigo).ToList();
                     int pontuacaoFases = alunoFases.Count * 350;
-                    
+
                     if (!string.IsNullOrEmpty(usuario.fotoPerfil))
                     {
                         usuario.fotoPerfil = new S3Service("fotojogadores").GetUrlFile(usuario.fotoPerfil, 6);
@@ -242,15 +243,15 @@ namespace WebApiGintec.Application.Usuario
 
                     // Adicionando o aluno ao ranking
                     lstRank.Add(new PontuacaoAluno()
-                    {                        
+                    {
                         Nome = usuario.Nome,
-                        isPadrinho = usuario.isPadrinho,                        
-                        Turma = usuario.Sala?.Codigo != null? $"{usuario.Sala?.Serie}º {usuario?.Sala.Descricao}" : "",
+                        isPadrinho = usuario.isPadrinho,
+                        Turma = usuario.Sala?.Codigo != null ? $"{usuario.Sala?.Serie}º {usuario?.Sala.Descricao}" : "",
                         FotoPerfil = usuario.fotoPerfil,
-                        Pontos =  new PontuacaoResponse()
+                        Pontos = new PontuacaoResponse()
                         {
                             PontuacaGeral = pontuacaoAtividades + pontuacaoFases + pontosExtra + pontosextraIndividuais
-                        }                        
+                        }
                     });
                 }
 
@@ -397,7 +398,7 @@ namespace WebApiGintec.Application.Usuario
 
                 dataResponse.PontuacaGeral = pontuacaoJogos + pontosExtra;
                 dataResponse.CampeonatosFeitos = jogos.Where(x => x.CampeonatoCodigo != null).Count();
-                dataResponse.AtividadesFeitos = jogos.Where(x => x.AtividadeCodigo != null).Count();                
+                dataResponse.AtividadesFeitos = jogos.Where(x => x.AtividadeCodigo != null).Count();
                 var pontuacaoDia = jogos.Where(x => x.dataCad.Date == DateTime.Now.Date).Count() * 600 + jogos.Where(x => x.dataCad.Date == DateTime.Now.Date).Sum(u => u.AtividadePontuacaoExtra?.Pontuacao ?? 0);
                 dataResponse.PontuacaoDia = pontuacaoDia;
 
@@ -431,7 +432,77 @@ namespace WebApiGintec.Application.Usuario
                         Pontuacao = dataResponse,
                     },
                     mensagem = "success"
-                };                                   
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<UsuarioResponse>()
+                {
+                    mensagem = "failed",
+                    response = null,
+                    error = ex
+                };
+            }
+        } 
+        public GenericResponse<UsuarioResponse> ObterUsuarioPorRM(string rm)
+        {
+            try
+            {
+                var user = _context.Usuarios.Include(x => x.Sala)
+                    .Include(c => c.StatusUsuario)
+                    .Include(c => c.AtividadeCampeonatoRealizada)
+                    .ThenInclude(u => u.AtividadePontuacaoExtra)
+                    .FirstOrDefault(y => y.RM == rm);
+
+                if (user == null)
+                    return new GenericResponse<UsuarioResponse>()
+                    {
+                        mensagem = "failed"
+                    };
+                var jogos = _context.AtividadesCampeonatoRealizadas.Include(u => u.AtividadePontuacaoExtra).Where(x => x.UsuarioCodigo == user.Codigo).ToList();
+
+
+                PontuacaoResponse dataResponse = new PontuacaoResponse();
+                int pontosExtra = jogos.Sum(u => u.AtividadePontuacaoExtra?.Pontuacao ?? 0);
+                int pontuacaoJogos = jogos.Count() * 600;
+
+                dataResponse.PontuacaGeral = pontuacaoJogos + pontosExtra;
+                dataResponse.CampeonatosFeitos = jogos.Where(x => x.CampeonatoCodigo != null).Count();
+                dataResponse.AtividadesFeitos = jogos.Where(x => x.AtividadeCodigo != null).Count();
+                var pontuacaoDia = jogos.Where(x => x.dataCad.Date == DateTime.Now.Date).Count() * 600 + jogos.Where(x => x.dataCad.Date == DateTime.Now.Date).Sum(u => u.AtividadePontuacaoExtra?.Pontuacao ?? 0);
+                dataResponse.PontuacaoDia = pontuacaoDia;
+
+                var photo = "";
+
+                if (!string.IsNullOrEmpty(user.fotoPerfil))
+                    user.fotoPerfil = new S3Service("fotojogadores").GetUrlFile(user.fotoPerfil, 6);
+
+                return new GenericResponse<UsuarioResponse>()
+                {
+                    response = new UsuarioResponse()
+                    {
+                        Codigo = user.Codigo,
+                        Nome = user.Nome,
+                        RM = user.RM,
+                        Email = user.Email,
+                        Status = user.Status,
+                        Senha = user.Senha,
+                        SalaCodigo = user.SalaCodigo,
+                        isPadrinho = user.isPadrinho,
+                        fotoPerfil = user.fotoPerfil,
+                        oficinacodigo = user.oficinacodigo,
+                        Sala = user.Sala,
+                        Oficina = user.Oficina,
+                        StatusUsuario = user.StatusUsuario,
+                        AtividadeCodigo = user.AtividadeCodigo,
+                        Atividade = user.Atividade,
+                        CampeonatoCodigo = user.CampeonatoCodigo,
+                        Campeonato = user.Campeonato,
+                        AtividadeCampeonatoRealizada = user.AtividadeCampeonatoRealizada,
+                        Pontuacao = dataResponse,
+                    },
+                    mensagem = "success"
+                };
             }
             catch (Exception ex)
             {
@@ -481,6 +552,49 @@ namespace WebApiGintec.Application.Usuario
                 {
                     mensagem = "failed",
                     error = ex,
+                };
+            }
+        }
+
+        public GenericResponse<List<PermissaoStatus>> ObterPermissoes(int usuarioStatus)
+        {
+            try
+            {
+                var lstpermissions = _context.PermissaoStatus.Where(x => x.statuscodigo == usuarioStatus).ToList();
+
+                return new GenericResponse<List<PermissaoStatus>>()
+                {
+                    mensagem = "success",
+                    response = lstpermissions
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<List<PermissaoStatus>>()
+                {
+                    error = ex,
+                    response = null
+                };
+            }
+        }
+        public GenericResponse<List<StatusUsuario>> ObterRoles()
+        {
+            try
+            {
+                var lstpermissions = _context.Statuses.ToList();
+
+                return new GenericResponse<List<StatusUsuario>>()
+                {
+                    mensagem = "success",
+                    response = lstpermissions
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<List<StatusUsuario>>()
+                {
+                    error = ex,
+                    response = null
                 };
             }
         }

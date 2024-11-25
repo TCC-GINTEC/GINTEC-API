@@ -11,7 +11,7 @@ namespace WebApiGintec.Application.Auth.Models
     {
         public string Token { get; set; }
         public string Email { get; set; }
-        public int UsuarioCodigo { get; set; }
+        public int UsuarioCodigo { get; set; }        
         public int Status { get; set; }
         public int? AtividadeCodigo { get; set; }
         public int? CampeonatoCodigo { get; set; }

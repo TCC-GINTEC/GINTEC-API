@@ -38,5 +38,26 @@ namespace WebApiGintec.Application.Calendario
                 };
             }
         }
+        public GenericResponse<List<Repository.Tables.Calendario>> ObterDatasAdmin()
+        {
+            try
+            {
+                var lstCalendar = _context.Calendario.Include(x => x.Campeonatos).ToList();
+                return new GenericResponse<List<Repository.Tables.Calendario>>()
+                {
+                    mensagem = "success",
+                    response = lstCalendar
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<List<Repository.Tables.Calendario>>()
+                {
+                    error = ex,
+                    mensagem = "failed",
+                    response = null
+                };
+            }
+        }
     }
 }

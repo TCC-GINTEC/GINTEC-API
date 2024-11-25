@@ -46,6 +46,18 @@ namespace WebApiGintec.Controllers
                 return BadRequest();
         }
         [HttpGet]
+        [Route("rm/{id}")]
+        [Authorize]
+        public IActionResult ObterUsuarioPorRM([FromRoute] string id)
+        {
+            var usuarioService = new UsuarioService(_context);
+            var response = usuarioService.ObterUsuarioPorRM(id);
+            if (response.mensagem == "success")
+                return Ok(response.response);
+            else
+                return BadRequest();
+        }
+        [HttpGet]
         [Route("Sala/{id}")]
         [Authorize]
         public IActionResult ObterTodosOsUsuariosPorSala([FromRoute] int id)
@@ -91,6 +103,21 @@ namespace WebApiGintec.Controllers
                 var usuarioService = new UsuarioService(_context);
                 response = usuarioService.AtualizarUsuario(id, request);
             }
+
+            if (response == null)
+                return BadRequest();
+            else
+                return Ok(response);
+        }
+        [HttpPut]
+        [Route("{id}")]
+        [Authorize]
+        public IActionResult AtualizarUsuario([FromRoute] int id, [FromBody] UserRequest request)
+        {
+            var response = new Usuario();
+
+            var usuarioService = new UsuarioService(_context);
+            response = usuarioService.AtualizarUsuario(id, request);
 
             if (response == null)
                 return BadRequest();
@@ -193,6 +220,34 @@ namespace WebApiGintec.Controllers
 
             if (response.mensagem == "success")
                 return NoContent();
+            else
+                return BadRequest();
+        }
+        [HttpGet]
+        [Authorize]
+        [Route("Permissoes")]
+        public IActionResult ObterPermissoes()
+        {
+            var identidade = (ClaimsIdentity)HttpContext.User.Identity;
+            var usuarioStatus = identidade.FindFirst("usuarioStatus").Value;
+            var usuarioService = new UsuarioService(_context);
+            var response = usuarioService.ObterPermissoes(Convert.ToInt32(usuarioStatus));
+
+            if (response.mensagem == "success")
+                return Ok(response.response);
+            else
+                return BadRequest();
+        }
+        [HttpGet]
+        [Authorize]
+        [Route("ObterRoles")]
+        public IActionResult ObterRoles()
+        {
+            var usuarioService = new UsuarioService(_context);
+            var response = usuarioService.ObterRoles();
+
+            if (response.mensagem == "success")
+                return Ok(response.response);
             else
                 return BadRequest();
         }

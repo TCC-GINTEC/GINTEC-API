@@ -19,7 +19,8 @@ namespace WebApiGintec.Application.Usuario.Models
         public int SalaCodigo { get; set; }
         public bool IsPadrinho { get; set; }
         public int? AtividadeCodigo { get; set; }
-        public int? CampeonatoCodigo { get; set; }
+        public int? CampeonatoCodigo { get; set; }  
+        public int? OficinaCodigo { get; set; }
         public string? fotoPerfil { get; set; }
     }
 }

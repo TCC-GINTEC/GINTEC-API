@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using WebApiGintec.Application.Atividade;
 using WebApiGintec.Application.Auth;
 using WebApiGintec.Application.Calendario;
@@ -21,8 +22,11 @@ namespace WebApiGintec.Controllers
         [Authorize]
         public IActionResult ObterDatas()
         {
+            var identidade = (ClaimsIdentity)HttpContext.User.Identity;
+            var usuariostatus = identidade.FindFirst("usuarioStatus").Value;
             var calendarioService = new CalendarioService(_context);
-            var response = calendarioService.ObterDatas();
+
+            var response = usuariostatus == "3" ? calendarioService.ObterDatasAdmin() : calendarioService.ObterDatas();
             if (response.mensagem == "success")
                 return Ok(response.response);
             else

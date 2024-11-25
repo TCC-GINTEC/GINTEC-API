@@ -19,6 +19,57 @@ namespace WebApiGintec.Application.Sala
         {
             _context = context;
         }
+        public GenericResponse<List<ParticipacaoSalas>> ObterParticipacaoSalas()
+        {
+            try
+            {
+                var salas = _context.Salas.Where(x => x.Descricao != "Não possui sala").ToList();
+
+                var lstPontuacao = new List<ParticipacaoSalas>();
+
+                var lstusuariocodigo = _context.Usuarios.ToList();
+
+                var atts = _context.AtividadesCampeonatoRealizadas.ToList();
+
+                foreach (var item in salas)
+                {
+                    var lstcodigousers = lstusuariocodigo.Where(x => x.SalaCodigo == item.Codigo).Select(y => y.Codigo);
+                    lstPontuacao.Add(new ParticipacaoSalas()
+                    {
+                        SalaNome = $"{item.Serie}º {item.Descricao}",
+                        Pontuacao = atts.Where(x => lstcodigousers.Contains(x.UsuarioCodigo)).ToList().Count()
+                    });
+                }
+                var porcentagens = new List<ParticipacaoSalas>();
+                var pontuacaoPrimeiroLugar = lstPontuacao.OrderByDescending(x => x.Pontuacao).First().Pontuacao;
+
+                foreach (var item in lstPontuacao.OrderByDescending(x => x.Pontuacao))
+                {
+                    int porcentagem = (int)Math.Ceiling((decimal)item.Pontuacao / pontuacaoPrimeiroLugar * 100);
+                    porcentagens.Add(new ParticipacaoSalas()
+                    {
+                        SalaNome = item.SalaNome,
+                        Pontuacao = porcentagem
+                    });
+                }
+
+                return new GenericResponse<List<ParticipacaoSalas>>()
+                {
+                    mensagem = "success",
+                    response = porcentagens
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<List<ParticipacaoSalas>>()
+                {
+                    error = ex,
+                    mensagem = "failed",
+                    response = null
+                };
+            }
+        }
+
         public GenericResponse<List<Repository.Tables.Sala>> ObterTodasAsSalas()
         {
             try
@@ -81,7 +132,7 @@ namespace WebApiGintec.Application.Sala
             try
             {
                 var lstRank = new List<RankingSala>();
-                
+
                 var lstPontAlunosAtt = (from acr in _context.AtividadesCampeonatoRealizadas
                                         join ap in _context.AtividadesPontuacaoExtra on acr.AtividadePontuacaoExtraCodigo equals ap.Codigo into ap_join
                                         from ap in ap_join.DefaultIfEmpty()
@@ -96,7 +147,7 @@ namespace WebApiGintec.Application.Sala
                                             Atividade = a,
                                             Calendario = c
                                         }).ToList();
-                
+
                 var lstPontAlunosChamp = (from acr in _context.AtividadesCampeonatoRealizadas
                                           join u in _context.Usuarios on acr.UsuarioCodigo equals u.Codigo
                                           join fase in _context.Fases on acr.CampeonatoCodigo equals fase.Codigo
@@ -110,15 +161,15 @@ namespace WebApiGintec.Application.Sala
                                               Usuario = u,
                                               Calendario = c
                                           }).ToList();
-                
+
                 var pontosExtrasQVemDoNada = _context.AlunoPontuacao.Include(x => x.Usuario).ToList(); ;
 
                 foreach (var sala in _context.Salas.ToList())
-                {                    
+                {
                     if (sala.Descricao == "Não possui sala")
                         continue;
                     var salaPontos = lstPontAlunosAtt.Where(x => x.Usuario.SalaCodigo == sala.Codigo).ToList();
-                  
+
                     int pontosExtra = salaPontos.Where(x => x.AtividadePontuacaoExtra != null)
                                                 .Select(y => y.AtividadePontuacaoExtra.Pontuacao)
                                                 .Sum();
@@ -127,9 +178,9 @@ namespace WebApiGintec.Application.Sala
 
 
                     int pontuacaoAtividades = salaPontos.Count * 600;
-                    
+
                     var salaFases = lstPontAlunosChamp.Where(x => x.Usuario.SalaCodigo == sala.Codigo).ToList();
-                    
+
                     int pontuacaoFases = salaFases.Count * 350;
 
                     // Verificando e obtendo a URL da foto da sala, caso exista

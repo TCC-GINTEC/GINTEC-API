@@ -33,6 +33,6 @@ namespace WebApiGintec.Repository.Tables
 
         [ForeignKey("Sala2Codigo")]
         public Sala Sala2 { get; set; }
-        public List<CampeonatoResultado> Resultados { get; set; }        
+        public CampeonatoResultado Resultado { get; set; }        
     }
 }

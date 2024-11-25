@@ -12,5 +12,6 @@ namespace WebApiGintec.Application.Atividade.Models
         public string Descricao { get; set; }
         public bool IsPontuacaoExtra { get; set; }
         public int? SalaCodigo { get; set; }
+        public int CalendarioCodigo { get; set; }
     }
 }

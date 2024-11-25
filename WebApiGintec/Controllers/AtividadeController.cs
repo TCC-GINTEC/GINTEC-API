@@ -32,7 +32,7 @@ namespace WebApiGintec.Controllers
         [HttpGet]
         [Authorize]
         [Route("{id}")]
-        public IActionResult ObterAtividadePorCodiog([FromRoute]int id)
+        public IActionResult ObterAtividadePorCodiog([FromRoute] int id)
         {
             var atividaadeService = new AtividadeService(_context);
             var response = atividaadeService.ObterAtividadePorCodiog(id);
@@ -87,8 +87,8 @@ namespace WebApiGintec.Controllers
         public IActionResult MarcarPontuação([FromBody] AtividadeCampeonatoRealizadaRequest request)
         {
             var identidade = (ClaimsIdentity)HttpContext.User.Identity;
-            var usuarioCodigo = identidade.FindFirst("usuarioCodigo").Value;           
-            var atividadeService = new AtividadeService(_context);            
+            var usuarioCodigo = identidade.FindFirst("usuarioCodigo").Value;
+            var atividadeService = new AtividadeService(_context);
             var response = atividadeService.MarcarPontos(request, Convert.ToInt32(usuarioCodigo));
             if (response.mensagem == "success")
                 return Ok(response.response);
@@ -100,7 +100,7 @@ namespace WebApiGintec.Controllers
                 return BadRequest(new { error = "Jogador não participa deste campeonato" });
 
             else
-                return BadRequest();            
+                return BadRequest();
         }
         [HttpPost]
         [Authorize]
@@ -109,16 +109,16 @@ namespace WebApiGintec.Controllers
         {
             var identidade = (ClaimsIdentity)HttpContext.User.Identity;
             var usuarioCodigo = identidade.FindFirst("usuarioCodigo").Value;
-            var atividadeService = new AtividadeService(_context);            
-            var response = atividadeService.MarcarPontos2(request,Convert.ToInt32(usuarioCodigo));
+            var atividadeService = new AtividadeService(_context);
+            var response = atividadeService.MarcarPontos2(request, Convert.ToInt32(usuarioCodigo));
             if (response.mensagem == "success")
                 return Ok(response.response);
             else if (response.mensagem == "Score already marked")
-                return BadRequest(new {error = "Você já jogou este jogo/campeonato"});
+                return BadRequest(new { error = "Você já jogou este jogo/campeonato" });
             else if (response.mensagem == "user not found")
-                return BadRequest(new {error = "Usuario não encontrado"});
+                return BadRequest(new { error = "Usuario não encontrado" });
             else
-                return BadRequest();            
+                return BadRequest();
         }
         #endregion
         #region Pontuacao
@@ -145,7 +145,7 @@ namespace WebApiGintec.Controllers
                 return Ok(response.response);
             else
                 return BadRequest();
-        }       
+        }
         [HttpDelete]
         [Authorize]
         [Route("Pontuacao/{id}")]
@@ -180,5 +180,16 @@ namespace WebApiGintec.Controllers
                 return BadRequest();
         }
         #endregion
+        [HttpGet("ObterPontuacaoTotal")]
+        [Authorize]
+        public IActionResult ObterPontuacaoTotal()
+        {
+            return Ok(_context.ObterSomaQtdPontosAsync().Result);
+        } [HttpGet("ObterPontuacaoExtraTotal")]
+        [Authorize]
+        public IActionResult ObterPontuacaoExtraTotal()
+        {
+            return Ok(_context.ObterSomaQtdPontosExtrasAsync().Result);
+        }
     }
 }

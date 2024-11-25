@@ -21,8 +21,8 @@ namespace WebApiGintec.Application.Util
 
 
         private readonly IAmazonS3 _client;
-        private readonly string _awsAccessKey = "AKIA5FTY7IAGOQBKKWJZ";
-        private readonly string _awsSecretKey = "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";
+        private readonly string _awsAccessKey = "AKIA5FTY7IAGG3JFWIY6";
+        private readonly string _awsSecretKey = "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";
 
         public S3Service(string diretory, string bucket)
         {

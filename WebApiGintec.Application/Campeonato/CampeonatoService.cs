@@ -138,6 +138,35 @@ namespace WebApiGintec.Application.Campeonato
                 };
             }
         }
+        public GenericResponse<List<Repository.Tables.CampeonatoJogo>> ObterJogosPorCodigoFase(int codigoFase)
+        {
+            try
+            {
+                var campeonato = _context.Jogos.Where(c => c.FaseCodigo == codigoFase).ToList();
+
+                if (campeonato == null)
+                {
+                    return new GenericResponse<List<CampeonatoJogo>>()
+                    {
+                        mensagem = "not found"
+                    };
+                }
+
+                return new GenericResponse<List<CampeonatoJogo>>()
+                {
+                    mensagem = "success",
+                    response = campeonato
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<List<CampeonatoJogo>>()
+                {
+                    mensagem = "failed",
+                    error = ex
+                };
+            }
+        }
         public GenericResponse<List<CampeonatoFeitoResponse>> ObterCampeonatoFeito(int codigoCampeonato, int usuarioCodigo)
         {
             try
@@ -185,6 +214,27 @@ namespace WebApiGintec.Application.Campeonato
             }
         }
 
+        //public GenericResponse<List<Repository.Tables.Campeonato>> DefinirVencedor(int salaCodigo)
+        //{
+        //    try
+        //    {
+        //        var campeonatos = _context.Jogos.Where(x => x.Sala1Codigo == salaCodigo || x.Sala2Codigo == salaCodigo).OrderBy(i => i.Codigo).Last();
+
+        //        return new GenericResponse<List<Repository.Tables.Campeonato>>
+        //        {
+        //            mensagem = "success",
+        //            response = campeonatos
+        //        };
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return new GenericResponse<List<Repository.Tables.Campeonato>>
+        //        {
+        //            mensagem = "failed",
+        //            error = ex
+        //        };
+        //    }
+        //}
         public GenericResponse<List<Repository.Tables.Campeonato>> ObterCampeonatos()
         {
             try
@@ -301,6 +351,47 @@ namespace WebApiGintec.Application.Campeonato
                 {
                     mensagem = "An error occurred: " + ex.Message,
                     response = false
+                };
+            }
+        }
+
+        public GenericResponse<bool> DefinirVencedor(int salacodigo, int fasecodigo)
+        {
+            try
+            {
+                var jogoSala = _context.Jogos.FirstOrDefault(x => x.FaseCodigo == fasecodigo && (salacodigo == x.Sala1Codigo || x.Sala2Codigo == salacodigo));
+
+                _context.Resultados.Add(new CampeonatoResultado()
+                {
+                    JogoCodigo = jogoSala.Codigo,
+                    Pontos = 350,
+                    SalaCodigo = salacodigo
+                });
+                _context.SaveChanges();
+
+                var fase = _context.Fases.FirstOrDefault(x => x.Codigo == fasecodigo);
+
+                var nextfase = _context.Fases.Where(x => x.CampeonatoCodigo == fase.CampeonatoCodigo).OrderBy(i => i.Codigo).ToList()
+                    .FirstOrDefault(o => o.Codigo > fasecodigo);
+
+                var jogos = _context.Jogos.Include(i => i.Resultado).Where(x => x.FaseCodigo == fasecodigo && x.Resultado != null).ToList();
+
+                var jogoscodigo = jogos.Select(x => x.Resultado.SalaCodigo).ToList();
+                var jogosfasesatuais = _context.Jogos.Where(x => x.FaseCodigo == nextfase.Codigo && (!jogoscodigo.Contains(x.Sala1Codigo) || !jogoscodigo.Contains(x.Sala2Codigo))).FirstOrDefault();
+
+
+                return new GenericResponse<bool>()
+                {
+                    mensagem = "success",
+                    response = true
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<bool>()
+                {
+                    response = false,
+                    mensagem = "failed"
                 };
             }
         }
