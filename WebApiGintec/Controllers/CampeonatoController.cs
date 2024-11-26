@@ -54,7 +54,7 @@ namespace WebApiGintec.Controllers
         }
         [HttpPost]
         [Authorize]
-        public IActionResult CriarCampeonato([FromBody] Campeonato campeonato)
+        public IActionResult CriarCampeonato([FromBody] CampeonatoRequest campeonato)
         {
             var response = _campeonatoService.CriarCampeonato(campeonato);
             return response.mensagem == "success" ? CreatedAtAction(nameof(ObterCampeonato), new { codigo = response.response.Codigo }, response.response) : BadRequest(response);
@@ -85,10 +85,10 @@ namespace WebApiGintec.Controllers
         }
         [HttpPost]
         [Authorize]
-        [Route("Vencedor/{salacodigo}/{fasecodigo}")]
-        public IActionResult DefinirVencedor([FromRoute] int salacodigo, [FromRoute] int fasecodigo)
+        [Route("Vencedor/{timecodigo}/{fasecodigo}")]
+        public IActionResult DefinirVencedor([FromRoute] int timecodigo, [FromRoute] int fasecodigo)
         {
-            var response = _campeonatoService.DefinirVencedor(salacodigo, fasecodigo);
+            var response = _campeonatoService.DefinirVencedor(timecodigo, fasecodigo);
 
             if (response.mensagem == "success")
                 return NoContent();

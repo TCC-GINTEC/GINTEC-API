@@ -12,7 +12,9 @@ namespace WebApiGintec.Application.Campeonato
     public class CampeonatoRequest
     {        
         public string Descricao { get; set; }        
-        public int SalaCodigo { get; set; }                
+        public int SalaCodigo { get; set; }
+        public int CalendarioCodigo { get; set; }
+        public bool isQuadra { get; set; }
     }
 }
 
