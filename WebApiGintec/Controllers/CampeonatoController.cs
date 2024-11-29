@@ -83,6 +83,22 @@ namespace WebApiGintec.Controllers
             var response = _campeonatoService.IniciarCampeonato(request);
             return response.mensagem == "success" ? (response.response ? NoContent() : BadRequest(new { error = "Campeonato não encontrado" })) : BadRequest(response);
         }
+        [HttpGet]
+        [Route("Jogador/{salacodigo}/{campeonatocodigo}")]
+        [Authorize]
+        public IActionResult ObterJogadorPorCampeonatoESala([FromRoute] int salacodigo, [FromRoute] int campeonatocodigo)
+        {
+            var response = _campeonatoService.ObterJogadorPorCampeonatoESala(salacodigo, campeonatocodigo);
+            return response.mensagem == "success" ? (response.response.Count <= 0 ? NoContent() : Ok(response.response)) : BadRequest(response);
+        }
+        [HttpPost]
+        [Route("Jogador")]
+        [Authorize]
+        public IActionResult CadastrarJogador([FromBody] JogadorRequest request)
+        {
+            var response = _campeonatoService.CadastrarJogador(request);
+            return response.mensagem == "success" ? Ok(response.response) : BadRequest(response);
+        }
         [HttpPost]
         [Authorize]
         [Route("Vencedor/{timecodigo}/{fasecodigo}")]

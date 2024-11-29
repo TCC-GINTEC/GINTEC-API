@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using WebApiGintec.Application.Sala.Models;
 using WebApiGintec.Application.Util;
 using WebApiGintec.Repository;
-using WebApiGintec.Repository.Tables;
-using ZstdSharp.Unsafe;
 
 namespace WebApiGintec.Application.Sala
 {
@@ -74,7 +72,7 @@ namespace WebApiGintec.Application.Sala
         {
             try
             {
-                var salasDb = _context.Salas.ToList();
+                var salasDb = _context.Salas.Where(x => x.isActive == true).ToList();
 
                 foreach (var sala in salasDb)
                 {

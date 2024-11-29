@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using WebApiGintec.Application.Campeonato.Models;
 using WebApiGintec.Application.Util;
@@ -23,9 +24,9 @@ namespace WebApiGintec.Application.Campeonato
                 var result = _context.Campeonatos.Add(new Repository.Tables.Campeonato()
                 {
                     CalendarioCodigo = campeonato.CalendarioCodigo,
-                    Descricao = campeonato.Descricao ,
+                    Descricao = campeonato.Descricao,
                     isQuadra = campeonato.isQuadra,
-                    SalaCodigo = campeonato.SalaCodigo                    
+                    SalaCodigo = campeonato.SalaCodigo
                 });
                 _context.SaveChanges();
                 return new GenericResponse<Repository.Tables.Campeonato>
@@ -330,6 +331,62 @@ namespace WebApiGintec.Application.Campeonato
                 };
             }
         }
+        public GenericResponse<Repository.Tables.CampeonatoJogador> CadastrarJogador(JogadorRequest request)
+        {
+            try
+            {
+                if (_context.CampeonatoJogador.Include(x => x.Usuario).Any(i => i.Usuario.RM == request.RM && i.CampeonatoCodigo == request.CampeonatoCodigo))
+                    return new GenericResponse<Repository.Tables.CampeonatoJogador>()
+                    {
+                        mensagem = "player has exist",
+                        response = null
+                    };
+                var user = _context.Usuarios.FirstOrDefault(x => x.RM == request.RM);
+
+                var playerDB = _context.CampeonatoJogador.Add(new CampeonatoJogador()
+                {
+                    CampeonatoCodigo = request.CampeonatoCodigo,
+                    SalaCodigo = request.SalaCodigo,
+                    UsuarioCodigo = user.Codigo,
+                    TimeCodigo = request.TimeCodigo,
+                }).Entity;
+
+                _context.SaveChanges();
+                return new GenericResponse<CampeonatoJogador>()
+                {
+                    mensagem = "success",
+                    response = playerDB
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<Repository.Tables.CampeonatoJogador>
+                {
+                    mensagem = "failed",
+                    error = ex
+                };
+            }
+        }
+        public GenericResponse<List<Repository.Tables.CampeonatoJogador>> ObterJogadorPorCampeonatoESala(int salacodigo, int campeonatocodigo)
+        {
+            try
+            {
+                var lst = _context.CampeonatoJogador.Include(o => o.Usuario).Where(x => x.CampeonatoCodigo == campeonatocodigo && x.SalaCodigo == salacodigo).ToList();
+                return new GenericResponse<List<Repository.Tables.CampeonatoJogador>>()
+                {
+                    mensagem = "success",
+                    response = lst
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<List<Repository.Tables.CampeonatoJogador>>()
+                {
+                    mensagem = "failed",
+                    error = ex
+                };
+            }
+        }
         public GenericResponse<bool> IniciarCampeonato(StartCampeonatoModel request)
         {
             try
@@ -460,7 +517,7 @@ namespace WebApiGintec.Application.Campeonato
                 var nextfase = _context.Fases.Where(x => x.CampeonatoCodigo == fase.CampeonatoCodigo).OrderBy(i => i.Codigo).ToList()
                     .FirstOrDefault(o => o.Codigo > fasecodigo);
 
-                if(nextfase == null)
+                if (nextfase == null)
                 {
                     return new GenericResponse<bool>()
                     {

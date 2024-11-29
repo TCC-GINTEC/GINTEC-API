@@ -23,5 +23,7 @@ namespace WebApiGintec.Repository.Tables
 
         [Required]
         public int Pontos { get; set; }
+        [Required]
+        public int TimeCodigo { get; set; }
     }
 }
