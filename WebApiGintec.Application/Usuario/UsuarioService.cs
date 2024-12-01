@@ -43,9 +43,9 @@ namespace WebApiGintec.Application.Usuario
                     Senha = request.Senha,
                     Status = request.Status,
                     AtividadeCodigo = request.AtividadeCodigo,
-                    CampeonatoCodigo = request.CampeonatoCodigo,                    
+                    CampeonatoCodigo = request.CampeonatoCodigo,
                     isPadrinho = request.IsPadrinho,
-                    oficinacodigo= request.OficinaCodigo,                    
+                    oficinacodigo = request.OficinaCodigo,
 
                 });
                 _context.SaveChanges();
@@ -186,149 +186,80 @@ namespace WebApiGintec.Application.Usuario
                 };
             }
         }
-        public GenericResponse<List<PontuacaoAluno>> ObterPontuacaoTodosAlunos(bool isPadrinho)
+        public async Task<GenericResponse<List<PontuacaoAluno>>> ObterPontuacaoTodosAlunos(bool isPadrinho)
         {
-            try
+            var padrinho = isPadrinho ? '1' : '0';
+            var query = @$"
+        select u.nome, u.fotoperfil, u.ispadrinho, concat(sala.serie, ""° "", sala.descricao) as turma, sum(pontos) as pontos, sum(atividadesFeitos) as atividadesFeitos, sum(campeonatosFeitos) as campeonatosFeitos from (
+select atf.usuariocodigo, (count(atf.codigo) * 600  + sum(exat.pontuacao)) as pontos, count(atf.atividadecodigo) as atividadesFeitos, 0 as campeonatosFeitos from tabatividadecampeonatorealizada as atf
+inner join tabatividade as at
+on at.codigo = atf.atividadecodigo
+left join tabatividadepontuacaoextra as exat
+on exat.atividadeCodigo = at.codigo
+inner join tabcalendario as c
+on c.codigo = at.calendariocodigo
+where c.isativo = 1
+group by atf.usuariocodigo
+union
+select atf.usuariocodigo, count(fase.codigo) * 350 as pontos, 0 as atividadesFeitos, count(atf.campeonatocodigo) as campeonatosFeitos from tabatividadecampeonatorealizada as atf
+left join tabcampeonatofase as fase 
+on fase.codigo = atf.campeonatocodigo
+inner join tabcampeonato as camp
+on camp.codigo = fase.campeonatocodigo
+inner join tabcalendario as c
+on c.codigo = camp.calendariocodigo
+where c.isativo = 1
+group by atf.usuariocodigo
+union
+select atf.usuariocodigo, (count(off.codigo) * 600) as ponto, 0 as atividadesFeitos, 0 as campeonatosFeitoss from tabatividadecampeonatorealizada as atf
+inner join taboficinas as off
+on off.codigo = atf.oficinacodigo
+group by atf.usuariocodigo) as pontuacaogeral
+inner join tabusuario as u 
+inner join tabsala as sala
+on sala.codigo = u.salacodigo
+on u.codigo = usuariocodigo
+where u.ispadrinho = {padrinho}
+group by usuariocodigo
+order by sum(pontos) desc limit 10;";
+
+            var connection = _context.Database.GetDbConnection();
+
+            await using var command = connection.CreateCommand();
+            command.CommandText = query;
+            command.CommandType = System.Data.CommandType.Text;
+
+            if (connection.State != System.Data.ConnectionState.Open)
+                await connection.OpenAsync();
+
+            var result = new List<PontuacaoAluno>();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
             {
-                var lstRank = new List<PontuacaoAluno>();
+                var img = new S3Service("fotojogadores").GetUrlFile(reader["fotoperfil"].ToString(), 6);
 
-                var lstPontAlunosAtt = (from acr in _context.AtividadesCampeonatoRealizadas
-                                        join ap in _context.AtividadesPontuacaoExtra on acr.AtividadePontuacaoExtraCodigo equals ap.Codigo into ap_join
-                                        from ap in ap_join.DefaultIfEmpty()
-                                        join u in _context.Usuarios on acr.UsuarioCodigo equals u.Codigo
-                                        join a in _context.Atividades on acr.AtividadeCodigo equals a.Codigo
-                                        join c in _context.Calendario on a.CalendarioCodigo equals c.Codigo
-                                        where c.isAtivo == true && u.isPadrinho == isPadrinho
-                                        select new
-                                        {
-                                            AtividadePontuacaoExtra = ap,
-                                            Usuario = u,
-                                            Atividade = a,
-                                            Calendario = c
-                                        }).ToList();
-
-                var lstPontAlunosChamp = (from acr in _context.AtividadesCampeonatoRealizadas
-                                          join u in _context.Usuarios on acr.UsuarioCodigo equals u.Codigo
-                                          join fase in _context.Fases on acr.CampeonatoCodigo equals fase.Codigo
-                                          join camp in _context.Campeonatos on fase.CampeonatoCodigo equals camp.Codigo
-                                          join c in _context.Calendario on camp.CalendarioCodigo equals c.Codigo
-                                          where c.isAtivo == true && u.isPadrinho == isPadrinho
-                                          select new
-                                          {
-                                              Campeonato = camp,
-                                              Fase = fase,
-                                              Usuario = u,
-                                              Calendario = c
-                                          }).ToList();
-
-                var pontosExtras = _context.AlunoPontuacao.Include(x => x.Usuario).ToList();
-
-                foreach (var usuario in _context.Usuarios.Include(x => x.Sala).Where(x => x.isPadrinho == isPadrinho).ToList())
+                var aluno = new PontuacaoAluno
                 {
-                    var alunoPontosAtt = lstPontAlunosAtt.Where(x => x.Usuario.Codigo == usuario.Codigo).ToList();
-                    int pontosExtra = alunoPontosAtt.Where(x => x.AtividadePontuacaoExtra != null)
-                                                    .Select(y => y.AtividadePontuacaoExtra.Pontuacao)
-                                                    .Sum();
-
-                    var pontosextraIndividuais = pontosExtras.Where(x => x.Usuario.Codigo == usuario.Codigo).Sum(u => u.Pontos);
-                    int pontuacaoAtividades = alunoPontosAtt.Count * 600;
-
-                    var alunoFases = lstPontAlunosChamp.Where(x => x.Usuario.Codigo == usuario.Codigo).ToList();
-                    int pontuacaoFases = alunoFases.Count * 350;
-
-                    if (!string.IsNullOrEmpty(usuario.fotoPerfil))
+                    Nome = reader["nome"].ToString(),
+                    FotoPerfil = img,
+                    Turma = reader["turma"].ToString(),
+                    isPadrinho = Convert.ToBoolean(reader["ispadrinho"].ToString()),
+                    Pontos = new PontuacaoResponse
                     {
-                        usuario.fotoPerfil = new S3Service("fotojogadores").GetUrlFile(usuario.fotoPerfil, 6);
+                        PontuacaGeral = Convert.ToInt32(reader["pontos"]),
+                        AtividadesFeitos = Convert.ToInt32(reader["atividadesFeitos"]),
+                        CampeonatosFeitos = Convert.ToInt32(reader["campeonatosFeitos"]),
+                        PontuacaoDia = 0
                     }
-
-                    // Adicionando o aluno ao ranking
-                    lstRank.Add(new PontuacaoAluno()
-                    {
-                        Nome = usuario.Nome,
-                        isPadrinho = usuario.isPadrinho,
-                        Turma = usuario.Sala?.Codigo != null ? $"{usuario.Sala?.Serie}º {usuario?.Sala.Descricao}" : "",
-                        FotoPerfil = usuario.fotoPerfil,
-                        Pontos = new PontuacaoResponse()
-                        {
-                            PontuacaGeral = pontuacaoAtividades + pontuacaoFases + pontosExtra + pontosextraIndividuais
-                        }
-                    });
-                }
-
-                // Retornando a resposta com o ranking ordenado pela pontuação
-                return new GenericResponse<List<PontuacaoAluno>>()
-                {
-                    response = lstRank.OrderByDescending(x => x.Pontos.PontuacaGeral).ToList().Slice(0, 10),
-                    mensagem = "success"
                 };
+
+                result.Add(aluno);
             }
-            catch (Exception ex)
+            return new GenericResponse<List<PontuacaoAluno>>()
             {
-                // Captura de exceção para retorno de erro
-                return new GenericResponse<List<PontuacaoAluno>>()
-                {
-                    error = ex,
-                    mensagem = "failed",
-                    response = null
-                };
-            }
-        }
-
-        public GenericResponse<List<PontuacaoAluno>> sdada(bool ispadrinho)
-        {
-            try
-            {
-                var usuarios = _context.Usuarios.Include(x => x.Sala).ToList();
-                var jogos = _context.AtividadesCampeonatoRealizadas.ToList();
-                var pontos = _context.AtividadesPontuacaoExtra.ToList();
-
-                List<PontuacaoAluno> lstResponse = new();
-
-                foreach (var usuario in usuarios)
-                {
-                    PontuacaoResponse dataResponse = new PontuacaoResponse();
-                    var jogosFeitos = jogos.Where(x => x.UsuarioCodigo == usuario.Codigo).ToList();
-                    int pontosExtra = pontos.Where(x => jogosFeitos.Select(i => i.AtividadePontuacaoExtraCodigo).Contains(x.Codigo)).Select(n => n.Pontuacao).Sum(u => u);
-                    int pontuacaoJogos = jogosFeitos.Count() * 600;
-
-                    var pontosextras = _context.AlunoPontuacao.Where(x => x.UsuarioCodigo == usuario.Codigo).Sum(u => u.Pontos);
-
-                    dataResponse.PontuacaGeral = pontuacaoJogos + pontosExtra + pontosextras;
-                    dataResponse.CampeonatosFeitos = jogosFeitos.Where(x => x.CampeonatoCodigo != null).Count();
-                    dataResponse.AtividadesFeitos = jogosFeitos.Where(x => x.AtividadeCodigo != null).Count();
-
-                    var photo = "";
-                    lstResponse.Add(new PontuacaoAluno
-                    {
-                        FotoPerfil = photo,
-                        Nome = usuario.Nome,
-                        Turma = $"{usuario.Sala.Serie}º{usuario.Sala.Descricao}",
-                        isPadrinho = usuario.isPadrinho,
-                        Pontos = dataResponse
-                    });
-                }
-                foreach (var response in lstResponse.OrderByDescending(x => x.Pontos.PontuacaGeral).ToList().Slice(0, 10))
-                {
-                    if (!string.IsNullOrEmpty(response.FotoPerfil))
-                        response.FotoPerfil = new S3Service("fotojogadores").GetUrlFile(response.FotoPerfil, 6);
-                }
-
-                return new GenericResponse<List<PontuacaoAluno>>()
-                {
-                    mensagem = "success",
-                    response = lstResponse.OrderByDescending(x => x.Pontos.PontuacaGeral).ToList().Slice(0, 10)
-                };
-            }
-            catch (Exception ex)
-            {
-                return new GenericResponse<List<PontuacaoAluno>>()
-                {
-                    error = ex,
-                    mensagem = "failed",
-                    response = null
-                };
-
-            }
+                mensagem = "success",
+                response = result
+            };
         }
 
         public GenericResponse<List<Repository.Tables.Usuario>> ObterTodosOsUsuarios()
@@ -443,7 +374,7 @@ namespace WebApiGintec.Application.Usuario
                     error = ex
                 };
             }
-        } 
+        }
         public GenericResponse<UsuarioResponse> ObterUsuarioPorRM(string rm)
         {
             try

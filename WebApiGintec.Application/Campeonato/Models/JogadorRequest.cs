@@ -12,5 +12,7 @@ namespace WebApiGintec.Application.Campeonato.Models
         public int CampeonatoCodigo { get; set; }
         public int TimeCodigo { get; set; }
         public int SalaCodigo { get; set; }
+        public int TimeCodigo { get; set; }
+        public int CampeonatoCodigo { get; set; }
     }
 }

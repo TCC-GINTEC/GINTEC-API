@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MySql.Data.MySqlClient;
 using System.Data;
+using System.Dynamic;
 using WebApiGintec.Repository.Tables;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace WebApiGintec.Repository
 {
@@ -28,9 +30,9 @@ namespace WebApiGintec.Repository
         public DbSet<AlunoPontuacao> AlunoPontuacao { get; set; }
         public DbSet<PermissaoStatus> PermissaoStatus { get; set; }
         public DbSet<Doacao> Doacao { get; set; }
-        public DbSet<DoacaoAluno> DoacaoAluno { get; set; }
+        public DbSet<DoacaoAluno> DoacaoAluno { get; set; }        
         public async Task<int> ObterSomaQtdPontosAsync()
-        {            
+        {
             var sql = @"
     SELECT SUM(qtdpontos) AS Value
     FROM (
@@ -56,9 +58,9 @@ namespace WebApiGintec.Repository
                 .SingleOrDefaultAsync();
 
             return resultado;
-        } 
+        }
         public async Task<int> ObterSomaQtdPontosExtrasAsync()
-        {            
+        {
             var sql = @"
     select 
 sum(atx.pontuacao) as Value 
@@ -69,6 +71,43 @@ where attfeita.atividadecodigo is not null ";
             var resultado = await this.Database
                 .SqlQueryRaw<int>(sql)
                 .SingleOrDefaultAsync();
+
+            return resultado;
+        }
+
+        public async Task<List<dynamic>> ExecutarComandoSqlAsync(string sql)
+        {
+            var resultado = new List<dynamic>();
+
+            // Abrindo a conexão com o banco
+            using (var connection = this.Database.GetDbConnection())
+            {
+                if (connection.State == ConnectionState.Closed)
+                {
+                    await connection.OpenAsync();
+                }
+
+                // Executando o comando SQL
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = sql;
+                    command.CommandType = CommandType.Text;
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        // Lendo os dados retornados
+                        while (await reader.ReadAsync())
+                        {
+                            var row = new ExpandoObject() as IDictionary<string, object>;
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                row[reader.GetName(i)] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                            }
+                            resultado.Add(row);
+                        }
+                    }
+                }
+            }
 
             return resultado;
         }

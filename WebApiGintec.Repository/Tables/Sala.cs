@@ -15,5 +15,6 @@ namespace WebApiGintec.Repository.Tables
         [Required]        
         public int Serie { get; set; }
         public string? FotoSala { get; set; }
+        public bool isActive { get; set; }
     }
 }
