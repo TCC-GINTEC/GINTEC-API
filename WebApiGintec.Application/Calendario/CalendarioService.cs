@@ -21,7 +21,7 @@ namespace WebApiGintec.Application.Calendario
         {
             try
             {
-                var lstCalendar = _context.Calendario.Include(x => x.Campeonatos).Where(u => u.DataGincana.Date >= DateTime.Now.Date).ToList();
+                var lstCalendar = _context.Calendario.Include(x => x.Campeonatos.Where(x => x.isAtivo == true)).Where(u => u.DataGincana.Date >= DateTime.Now.Date).ToList();
                 return new GenericResponse<List<Repository.Tables.Calendario>>()
                 {
                     mensagem = "success",
@@ -42,7 +42,7 @@ namespace WebApiGintec.Application.Calendario
         {
             try
             {
-                var lstCalendar = _context.Calendario.Include(x => x.Campeonatos).ToList();
+                var lstCalendar = _context.Calendario.Include(x => x.Campeonatos.Where(x => x.isAtivo == true)).ToList();
                 return new GenericResponse<List<Repository.Tables.Calendario>>()
                 {
                     mensagem = "success",

@@ -95,5 +95,29 @@ namespace WebApiGintec.Controllers
             else 
                 return BadRequest(response);
         }
+        [HttpPost]
+        [Authorize]
+        [Route("CadastrarJogador")]
+        public IActionResult CadastrarJogador([FromBody] JogadorRequest request)
+        {
+            var response = _campeonatoService.CadastrarJogador(request);
+
+            if (response.mensagem == "success")
+                return NoContent();
+            else 
+                return BadRequest(response);
+        }
+        [HttpGet]
+        [Authorize]
+        [Route("ObterJogadores/{campeonatocodigo}")]
+        public IActionResult ObterJogadores([FromRoute] int campeonatocodigo)
+        {
+            var response = _campeonatoService.ObterJogadores(campeonatocodigo);
+
+            if (response.mensagem == "success")
+                return NoContent();
+            else 
+                return BadRequest(response);
+        }
     }
 }

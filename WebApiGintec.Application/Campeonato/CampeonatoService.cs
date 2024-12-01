@@ -86,7 +86,7 @@ namespace WebApiGintec.Application.Campeonato
                     };
                 }
 
-                _context.Campeonatos.Remove(campeonato);
+                campeonato.isAtivo = false;
                 _context.SaveChanges();
 
                 return new GenericResponse<bool>
@@ -113,7 +113,7 @@ namespace WebApiGintec.Application.Campeonato
                 var campeonato = _context.Campeonatos
                             .Include(c => c.Fases)
                             .ThenInclude(y => y.atividadeCampeonatoRealizadas)
-                            .FirstOrDefault(c => c.Codigo == codigoCampeonato);
+                            .FirstOrDefault(c => c.Codigo == codigoCampeonato && c.isAtivo == true);
 
                 if (campeonato == null)
                 {
@@ -241,6 +241,7 @@ namespace WebApiGintec.Application.Campeonato
             {
                 var campeonatos = _context.Campeonatos
                     .Include(c => c.Fases)
+                    .Where(x => x.isAtivo == true)
                     .ToList();
 
                 return new GenericResponse<List<Repository.Tables.Campeonato>>
@@ -262,7 +263,7 @@ namespace WebApiGintec.Application.Campeonato
         {
             try
             {
-                var camp = _context.Campeonatos.Include(x => x.Fases).FirstOrDefault(x => x.Codigo == request.CampeonatoCodigo);
+                var camp = _context.Campeonatos.Include(x => x.Fases).FirstOrDefault(x => x.Codigo == request.CampeonatoCodigo && x.isAtivo == true);
                 if (camp == null)
                     return new GenericResponse<bool>()
                     {
@@ -392,6 +393,63 @@ namespace WebApiGintec.Application.Campeonato
                 {
                     response = false,
                     mensagem = "failed"
+                };
+            }
+        }
+
+        public GenericResponse<bool> CadastrarJogador(JogadorRequest request)
+        {
+            try
+            {
+                if (_context.CampeonatoJogador.Any(x => x.CampeonatoCodigo == request.CampeonatoCodigo && x.UsuarioCodigo == request.UsuarioCodigo))
+                    return new GenericResponse<bool>()
+                    {
+                        mensagem = "has exists",
+                        response = false,
+                    };
+                _context.CampeonatoJogador.Add(new CampeonatoJogador()
+                {
+                    CampeonatoCodigo = request.CampeonatoCodigo,
+                    SalaCodigo = request.SalaCodigo,
+                    TimeCodigo = request.TimeCodigo,
+                    UsuarioCodigo = request.UsuarioCodigo
+                });
+                _context.SaveChanges();
+
+                return new GenericResponse<bool>()
+                {
+                    mensagem = "success",
+                    response = true
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<bool>()
+                {
+                    mensagem = "failed",
+                    error = ex,
+                    response = false
+                };
+            }
+        }
+
+        public GenericResponse<List<Repository.Tables.CampeonatoJogador>> ObterJogadores(int campeonatocodigo)
+        {
+            try
+            {
+                return new GenericResponse<List<CampeonatoJogador>>()
+                {
+                    mensagem = "success",
+                    response = _context.CampeonatoJogador.Include(x => x.Usuario).Where(u => u.CampeonatoCodigo == campeonatocodigo).ToList()
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<List<CampeonatoJogador>>()
+                {
+                    error = ex,
+                    mensagem = "failed",
+                    response = null
                 };
             }
         }
