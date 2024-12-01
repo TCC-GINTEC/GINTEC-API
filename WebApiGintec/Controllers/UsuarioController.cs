@@ -186,7 +186,7 @@ namespace WebApiGintec.Controllers
         public IActionResult ObterPontuacaoGeral(string? id)
         {
             var usuarioService = new UsuarioService(_context);
-            var response = usuarioService.ObterPontuacaoTodosAlunos(!string.IsNullOrEmpty(id));
+            var response = usuarioService.ObterPontuacaoTodosAlunos(!string.IsNullOrEmpty(id)).Result;
 
             if (response.mensagem == "success")
                 return Ok(response.response);

@@ -10,7 +10,7 @@ namespace WebApiGintec.Application.Usuario.Models
     {
         public string FotoPerfil { get; set; }
         public string Nome { get; set; }
-        public string Turma { get; set; }
+        public string Turma { get; set; }   
         public bool isPadrinho { get; set; }
         public PontuacaoResponse Pontos { get; set; }
     }

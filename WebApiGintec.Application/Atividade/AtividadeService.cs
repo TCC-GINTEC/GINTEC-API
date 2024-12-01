@@ -104,7 +104,8 @@ namespace WebApiGintec.Application.Atividade
                     Codigo = codigo,
                     Descricao = request.Descricao,
                     IsPontuacaoExtra = request.IsPontuacaoExtra,
-                    SalaCodigo = request.SalaCodigo
+                    SalaCodigo = request.SalaCodigo,
+                    CalendarioCodigo = request.CalendarioCodigo
                 });
                 _context.SaveChanges();
 
@@ -372,6 +373,49 @@ namespace WebApiGintec.Application.Atividade
                 {
                     mensagem = "failed",
                     response = null,
+                    error = ex
+                };
+            }
+        }
+        public GenericResponse<bool> AtualizarPontuacaoExtra(PontuacaoExtraRequestLote request)
+        {
+            try
+            {
+                var scores = _context.AtividadesPontuacaoExtra.Where(x => x.AtividadeCodigo == request.AtividadeCodigo).ToList();
+                foreach(var score in scores)
+                {
+                    if(request.Pontuacao.Count <= 0 || request.Pontuacao.Any(x => x != score.Pontuacao))
+                    {
+                        _context.AtividadesPontuacaoExtra.Remove(score);
+                    }
+                }
+                foreach(var score in request.Pontuacao)
+                {
+                    if (scores.Count <= 0 || scores.Any(x => x.Pontuacao != score))
+                    {
+                        _context.AtividadesPontuacaoExtra.Add(new AtividadePontuacaoExtra()
+                        {
+                            AtividadeCodigo = request.AtividadeCodigo,
+                            Pontuacao = score,
+                        });
+                    }
+                }
+
+                _context.SaveChanges();
+                
+
+                return new GenericResponse<bool>()
+                {
+                    mensagem = "success",
+                    response = true
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<bool>()
+                {
+                    mensagem = "failed",
+                    response = false,
                     error = ex
                 };
             }

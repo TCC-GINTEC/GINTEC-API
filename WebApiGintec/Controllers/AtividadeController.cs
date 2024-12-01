@@ -146,6 +146,18 @@ namespace WebApiGintec.Controllers
             else
                 return BadRequest();
         }
+        [HttpPut]
+        [Authorize]
+        [Route("Pontuacao")]
+        public IActionResult AtualizarPontuacaoExtra([FromBody] PontuacaoExtraRequestLote request)
+        {
+            var atividadeService = new AtividadeService(_context);
+            var response = atividadeService.AtualizarPontuacaoExtra(request);
+            if (response.mensagem == "success")
+                return Ok(response.response);
+            else
+                return BadRequest();
+        }
         [HttpDelete]
         [Authorize]
         [Route("Pontuacao/{id}")]

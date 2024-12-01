@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using WebApiGintec.Application.Campeonato.Models;
 using WebApiGintec.Application.Util;
 using WebApiGintec.Repository;
@@ -15,11 +17,17 @@ namespace WebApiGintec.Application.Campeonato
             _context = context;
         }
 
-        public GenericResponse<Repository.Tables.Campeonato> CriarCampeonato(Repository.Tables.Campeonato campeonato)
+        public GenericResponse<Repository.Tables.Campeonato> CriarCampeonato(CampeonatoRequest campeonato)
         {
             try
             {
-                var result = _context.Campeonatos.Add(campeonato);
+                var result = _context.Campeonatos.Add(new Repository.Tables.Campeonato()
+                {
+                    CalendarioCodigo = campeonato.CalendarioCodigo,
+                    Descricao = campeonato.Descricao,
+                    isQuadra = campeonato.isQuadra,
+                    SalaCodigo = campeonato.SalaCodigo
+                });
                 _context.SaveChanges();
                 return new GenericResponse<Repository.Tables.Campeonato>
                 {
@@ -138,29 +146,94 @@ namespace WebApiGintec.Application.Campeonato
                 };
             }
         }
-        public GenericResponse<List<Repository.Tables.CampeonatoJogo>> ObterJogosPorCodigoFase(int codigoFase)
+        public GenericResponse<List<CampeonatoJogoReponse>> ObterJogosPorCodigoFase(int codigoFase)
         {
             try
             {
-                var campeonato = _context.Jogos.Where(c => c.FaseCodigo == codigoFase).ToList();
+                var fase = _context.Fases.FirstOrDefault(x => x.Codigo == codigoFase);
+                var campeonato = _context.Jogos.Include(x => x.Resultado).Where(c => c.FaseCodigo == codigoFase).ToList();
+
+                var players = _context.CampeonatoJogador.Include(x => x.Usuario).ToList();
+                var salas = _context.Salas.ToList();
+
+                var response = new List<CampeonatoJogoReponse>();
+                foreach (var camp in campeonato)
+                {
+                    if (camp.Resultado == null)
+                    {
+                        var sala1 = salas.FirstOrDefault(x => x.Codigo == camp.Sala1Codigo);
+                        var sala2 = salas.FirstOrDefault(x => x.Codigo == camp.Sala2Codigo);
+                        response.Add(new CampeonatoJogoReponse
+                        {
+                            Codigo = camp.Codigo,
+                            FaseCodigo = camp.FaseCodigo,
+                            Sala1Codigo = camp.Sala1Codigo,
+                            Sala2Codigo = camp.Sala2Codigo,
+                            DataJogo = camp.DataJogo,
+                            TimeCodigo1 = camp.TimeCodigo1,
+                            TimeCodigo2 = camp.TimeCodigo2,
+                            Resultado = camp.Resultado != null ? new CampeonatoResultado
+                            {
+                                JogoCodigo = camp.Resultado.JogoCodigo,
+                                SalaCodigo = camp.Resultado.SalaCodigo,
+                                TimeCodigo = camp.Resultado.TimeCodigo,
+                            } : null,
+                            Nome1 = players.Where(x => x.CampeonatoCodigo == fase.CampeonatoCodigo && x.TimeCodigo == camp.TimeCodigo1).Count() > 1
+                            ? $"{sala1.Serie}° {sala1.Descricao}"
+                            : players.FirstOrDefault(x => x.CampeonatoCodigo == fase.CampeonatoCodigo && x.TimeCodigo == camp.TimeCodigo1).Usuario.Nome,
+                            Nome2 = players.Where(x => x.CampeonatoCodigo == fase.CampeonatoCodigo && x.TimeCodigo == camp.TimeCodigo2).Count() > 1
+                            ? $"{sala2.Serie}° {sala2.Descricao}"
+                            : players.FirstOrDefault(x => x.CampeonatoCodigo == fase.CampeonatoCodigo && x.TimeCodigo == camp.TimeCodigo2).Usuario.Nome,
+                        });
+                    }
+                    else
+                    {
+                        var salaganhadora = salas.FirstOrDefault(x => x.Codigo == camp.Resultado.SalaCodigo);
+                        response.Add(new CampeonatoJogoReponse
+                        {
+                            Codigo = camp.Codigo,
+                            FaseCodigo = camp.FaseCodigo,
+                            Sala1Codigo = camp.Sala1Codigo,
+                            Sala2Codigo = camp.Sala2Codigo,
+                            DataJogo = camp.DataJogo,
+                            TimeCodigo1 = camp.TimeCodigo1,
+                            TimeCodigo2 = camp.TimeCodigo2,
+                            Resultado = camp.Resultado != null ? new CampeonatoResultado
+                            {
+                                JogoCodigo = camp.Resultado.JogoCodigo,
+                                SalaCodigo = camp.Resultado.SalaCodigo,
+                                TimeCodigo = camp.Resultado.TimeCodigo,
+                            } : null,
+                            Nome1 = players.Where(x => x.CampeonatoCodigo == fase.CampeonatoCodigo && x.TimeCodigo == camp.TimeCodigo1).Count() > 1
+                            ? $"{salaganhadora.Serie}° {salaganhadora.Descricao}"
+                            : players.FirstOrDefault(x => x.CampeonatoCodigo == fase.CampeonatoCodigo && x.TimeCodigo == camp.TimeCodigo1).Usuario.Nome,
+                            Nome2 = players.Where(x => x.CampeonatoCodigo == fase.CampeonatoCodigo && x.TimeCodigo == camp.TimeCodigo2).Count() > 1
+                            ? $"{salaganhadora.Serie}° {salaganhadora.Descricao}"
+                            : players.FirstOrDefault(x => x.CampeonatoCodigo == fase.CampeonatoCodigo && x.TimeCodigo == camp.TimeCodigo2).Usuario.Nome,
+                            Vencedor = players.Where(x => x.CampeonatoCodigo == fase.CampeonatoCodigo && x.TimeCodigo == camp.Resultado.TimeCodigo).Count() > 1
+                            ? $"{salaganhadora.Serie}° {salaganhadora.Descricao}"
+                            : players.FirstOrDefault(x => x.CampeonatoCodigo == fase.CampeonatoCodigo && x.TimeCodigo == camp.Resultado.TimeCodigo).Usuario.Nome,
+                        });
+                    }
+                }
 
                 if (campeonato == null)
                 {
-                    return new GenericResponse<List<CampeonatoJogo>>()
+                    return new GenericResponse<List<CampeonatoJogoReponse>>()
                     {
                         mensagem = "not found"
                     };
                 }
 
-                return new GenericResponse<List<CampeonatoJogo>>()
+                return new GenericResponse<List<CampeonatoJogoReponse>>()
                 {
                     mensagem = "success",
-                    response = campeonato
+                    response = response
                 };
             }
             catch (Exception ex)
             {
-                return new GenericResponse<List<CampeonatoJogo>>()
+                return new GenericResponse<List<CampeonatoJogoReponse>>()
                 {
                     mensagem = "failed",
                     error = ex
@@ -252,6 +325,62 @@ namespace WebApiGintec.Application.Campeonato
             catch (Exception ex)
             {
                 return new GenericResponse<List<Repository.Tables.Campeonato>>
+                {
+                    mensagem = "failed",
+                    error = ex
+                };
+            }
+        }
+        public GenericResponse<Repository.Tables.CampeonatoJogador> CadastrarJogador(JogadorRequest request)
+        {
+            try
+            {
+                if (_context.CampeonatoJogador.Include(x => x.Usuario).Any(i => i.Usuario.RM == request.RM && i.CampeonatoCodigo == request.CampeonatoCodigo))
+                    return new GenericResponse<Repository.Tables.CampeonatoJogador>()
+                    {
+                        mensagem = "player has exist",
+                        response = null
+                    };
+                var user = _context.Usuarios.FirstOrDefault(x => x.RM == request.RM);
+
+                var playerDB = _context.CampeonatoJogador.Add(new CampeonatoJogador()
+                {
+                    CampeonatoCodigo = request.CampeonatoCodigo,
+                    SalaCodigo = request.SalaCodigo,
+                    UsuarioCodigo = user.Codigo,
+                    TimeCodigo = request.TimeCodigo,
+                }).Entity;
+
+                _context.SaveChanges();
+                return new GenericResponse<CampeonatoJogador>()
+                {
+                    mensagem = "success",
+                    response = playerDB
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<Repository.Tables.CampeonatoJogador>
+                {
+                    mensagem = "failed",
+                    error = ex
+                };
+            }
+        }
+        public GenericResponse<List<Repository.Tables.CampeonatoJogador>> ObterJogadorPorCampeonatoESala(int salacodigo, int campeonatocodigo)
+        {
+            try
+            {
+                var lst = _context.CampeonatoJogador.Include(o => o.Usuario).Where(x => x.CampeonatoCodigo == campeonatocodigo && x.SalaCodigo == salacodigo).ToList();
+                return new GenericResponse<List<Repository.Tables.CampeonatoJogador>>()
+                {
+                    mensagem = "success",
+                    response = lst
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<List<Repository.Tables.CampeonatoJogador>>()
                 {
                     mensagem = "failed",
                     error = ex
@@ -355,17 +484,31 @@ namespace WebApiGintec.Application.Campeonato
             }
         }
 
-        public GenericResponse<bool> DefinirVencedor(int salacodigo, int fasecodigo)
+        public GenericResponse<bool> DefinirVencedor(int timecodigo, int fasecodigo)
         {
             try
             {
-                var jogoSala = _context.Jogos.FirstOrDefault(x => x.FaseCodigo == fasecodigo && (salacodigo == x.Sala1Codigo || x.Sala2Codigo == salacodigo));
+                var jogoSala = _context.Jogos.FirstOrDefault(x => x.FaseCodigo == fasecodigo && (timecodigo == x.TimeCodigo1 || x.TimeCodigo2 == timecodigo));
 
+                if (jogoSala == null)
+                    return new GenericResponse<bool>()
+                    {
+                        response = false,
+                        mensagem = "not found"
+                    };
+
+                if (_context.Resultados.Any(x => x.JogoCodigo == jogoSala.Codigo))
+                    return new GenericResponse<bool>()
+                    {
+                        response = false,
+                        mensagem = "scored has marked"
+                    };
                 _context.Resultados.Add(new CampeonatoResultado()
                 {
                     JogoCodigo = jogoSala.Codigo,
                     Pontos = 350,
-                    SalaCodigo = salacodigo
+                    SalaCodigo = jogoSala.TimeCodigo2 == timecodigo ? jogoSala.Sala2Codigo : jogoSala.Sala1Codigo,
+                    TimeCodigo = timecodigo
                 });
                 _context.SaveChanges();
 
@@ -374,10 +517,38 @@ namespace WebApiGintec.Application.Campeonato
                 var nextfase = _context.Fases.Where(x => x.CampeonatoCodigo == fase.CampeonatoCodigo).OrderBy(i => i.Codigo).ToList()
                     .FirstOrDefault(o => o.Codigo > fasecodigo);
 
+                if (nextfase == null)
+                {
+                    return new GenericResponse<bool>()
+                    {
+                        response = false,
+                        mensagem = "champshion end"
+                    };
+                }
+
                 var jogos = _context.Jogos.Include(i => i.Resultado).Where(x => x.FaseCodigo == fasecodigo && x.Resultado != null).ToList();
 
-                var jogoscodigo = jogos.Select(x => x.Resultado.SalaCodigo).ToList();
-                var jogosfasesatuais = _context.Jogos.Where(x => x.FaseCodigo == nextfase.Codigo && (!jogoscodigo.Contains(x.Sala1Codigo) || !jogoscodigo.Contains(x.Sala2Codigo))).FirstOrDefault();
+                var lsttimesdisponiveis = new List<CampeonatoResultado>();
+                foreach (var jgocode in jogos)
+                {
+                    if (!_context.Jogos.Any(x => x.FaseCodigo == nextfase.Codigo && (x.TimeCodigo1 == jgocode.Resultado.TimeCodigo || x.TimeCodigo2 == jgocode.Resultado.TimeCodigo)))
+                    {
+                        lsttimesdisponiveis.Add(jgocode.Resultado);
+                    }
+                }
+                if (lsttimesdisponiveis.Count == 2)
+                {
+                    _context.Jogos.Add(new CampeonatoJogo()
+                    {
+                        FaseCodigo = nextfase.Codigo,
+                        DataJogo = jogoSala.DataJogo.AddMinutes(30),
+                        Sala1Codigo = lsttimesdisponiveis[0].SalaCodigo,
+                        Sala2Codigo = lsttimesdisponiveis[1].SalaCodigo,
+                        TimeCodigo1 = lsttimesdisponiveis[0].TimeCodigo,
+                        TimeCodigo2 = lsttimesdisponiveis[1].TimeCodigo,
+                    });
+                    _context.SaveChanges();
+                }
 
 
                 return new GenericResponse<bool>()
