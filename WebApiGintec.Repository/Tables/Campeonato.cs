@@ -20,6 +20,8 @@ namespace WebApiGintec.Repository.Tables
         public bool isQuadra {  get; set; }
         [Required]        
         public int CalendarioCodigo { get; set; }        
+        [Required]        
+        public bool isAtivo { get; set; }        
         [ForeignKey("SalaCodigo")]
         public Sala Sala { get; set; }
         [ForeignKey("CalendarioCodigo")]

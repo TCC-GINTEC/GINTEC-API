@@ -31,7 +31,7 @@ namespace WebApiGintec.Application.Atividade
                 var response = new GenericResponse<List<Repository.Tables.Atividade>>()
                 {
                     mensagem = "success",
-                    response = _context.Atividades.Include(x => x.Sala).Include(c => c.AtividadePontuacaoExtra).ToList()
+                    response = _context.Atividades.Include(x => x.Sala).Include(c => c.AtividadePontuacaoExtra).Include(o => o.Calendario).Where(x => x.isAtivo == true && x.Calendario.isDeleted == false).ToList()
                 };
                 return response;
             }
@@ -52,7 +52,7 @@ namespace WebApiGintec.Application.Atividade
                 var response = new GenericResponse<Repository.Tables.Atividade>()
                 {
                     mensagem = "success",
-                    response = _context.Atividades.Include(x => x.Sala).Include(c => c.AtividadePontuacaoExtra).FirstOrDefault(x => x.Codigo == codigo)
+                    response = _context.Atividades.Include(x => x.Sala).Include(c => c.AtividadePontuacaoExtra).FirstOrDefault(x => x.Codigo == codigo && x.isAtivo == true)
                 };
                 return response;
             }
@@ -75,7 +75,8 @@ namespace WebApiGintec.Application.Atividade
                     Descricao = request.Descricao,
                     IsPontuacaoExtra = request.IsPontuacaoExtra,
                     SalaCodigo = request.SalaCodigo,
-                    CalendarioCodigo = request.CalendarioCodigo
+                    CalendarioCodigo = request.CalendarioCodigo,
+                    isAtivo = true
                 });
                 _context.SaveChanges();
 
@@ -105,7 +106,8 @@ namespace WebApiGintec.Application.Atividade
                     Descricao = request.Descricao,
                     IsPontuacaoExtra = request.IsPontuacaoExtra,
                     SalaCodigo = request.SalaCodigo,
-                    CalendarioCodigo = request.CalendarioCodigo
+                    CalendarioCodigo = request.CalendarioCodigo,
+                    isAtivo = true
                 });
                 _context.SaveChanges();
 
@@ -133,11 +135,13 @@ namespace WebApiGintec.Application.Atividade
                 if (activity == null)
                     return new GenericResponse<bool> { mensagem = "success", response = false };
 
+                var ajudantes = _context.Usuarios.Where(x => x.AtividadeCodigo == codigo).ToList();
+                foreach (var user in ajudantes)
+                    user.AtividadeCodigo = null;
+                _context.Usuarios.UpdateRange(ajudantes);
 
-                var scores = _context.AtividadesPontuacaoExtra.Where(x => x.AtividadeCodigo == codigo);
-                _context.AtividadesPontuacaoExtra.RemoveRange(scores);
-                _context.Atividades.Remove(activity);
-
+                activity.isAtivo = false;
+                _context.Atividades.Update(activity);
                 _context.SaveChanges();
 
                 return new GenericResponse<bool>() { mensagem = "success", response = true };
@@ -337,7 +341,7 @@ namespace WebApiGintec.Application.Atividade
                 return new GenericResponse<List<Repository.Tables.AtividadePontuacaoExtra>>
                 {
                     mensagem = "success",
-                    response = _context.AtividadesPontuacaoExtra.Where(x => x.AtividadeCodigo == codigo).ToList()
+                    response = _context.AtividadesPontuacaoExtra.Where(x => x.AtividadeCodigo == codigo && x.isAtivo == true).ToList()
                 };
             }
             catch (Exception ex)
@@ -357,7 +361,8 @@ namespace WebApiGintec.Application.Atividade
                 var score = _context.AtividadesPontuacaoExtra.Add(new AtividadePontuacaoExtra()
                 {
                     AtividadeCodigo = request.AtividadeCodigo,
-                    Pontuacao = request.Pontuacao
+                    Pontuacao = request.Pontuacao,
+                    isAtivo = true
                 });
                 _context.SaveChanges();
 
@@ -382,14 +387,15 @@ namespace WebApiGintec.Application.Atividade
             try
             {
                 var scores = _context.AtividadesPontuacaoExtra.Where(x => x.AtividadeCodigo == request.AtividadeCodigo).ToList();
-                foreach(var score in scores)
+                foreach (var score in scores)
                 {
-                    if(request.Pontuacao.Count <= 0 || request.Pontuacao.Any(x => x != score.Pontuacao))
+                    if (request.Pontuacao.Count <= 0 || request.Pontuacao.Any(x => x != score.Pontuacao))
                     {
-                        _context.AtividadesPontuacaoExtra.Remove(score);
+                        score.isAtivo = false;
+                        _context.AtividadesPontuacaoExtra.Update(score);
                     }
                 }
-                foreach(var score in request.Pontuacao)
+                foreach (var score in request.Pontuacao)
                 {
                     if (scores.Count <= 0 || scores.Any(x => x.Pontuacao != score))
                     {
@@ -402,7 +408,7 @@ namespace WebApiGintec.Application.Atividade
                 }
 
                 _context.SaveChanges();
-                
+
 
                 return new GenericResponse<bool>()
                 {
@@ -427,7 +433,8 @@ namespace WebApiGintec.Application.Atividade
                 var score = _context.AtividadesPontuacaoExtra.FirstOrDefault(x => x.Codigo == id);
                 if (score == null)
                     return new GenericResponse<bool>() { mensagem = "success", response = false };
-                _context.AtividadesPontuacaoExtra.Remove(score);
+                score.isAtivo = false;
+                _context.AtividadesPontuacaoExtra.Update(score);
                 _context.SaveChanges();
 
                 return new GenericResponse<bool>() { mensagem = "success", response = true };
@@ -451,7 +458,9 @@ namespace WebApiGintec.Application.Atividade
                 var lstattFeitas = _context.AtividadesCampeonatoRealizadas.Include(x => x.AtividadePontuacaoExtra).Where(x => x.UsuarioCodigo == usuarioCodigo && x.AtividadeCodigo != null).ToList();
                 var dateNow = DateTime.Now;
                 var lstatt = _context.Atividades.Include(x => x.Sala).Include(c => c.AtividadePontuacaoExtra).Include(i => i.Calendario)
-                    .Where(x => x.Calendario.DataGincana.Year == dateNow.Year &&
+                    .Where(x => x.isAtivo == true &&
+                    x.Calendario.isDeleted == false &&
+                    x.Calendario.DataGincana.Year == dateNow.Year &&
                     x.Calendario.DataGincana.Month == dateNow.Month &&
                     x.Calendario.DataGincana.Day == dateNow.Day)
                     .ToList();

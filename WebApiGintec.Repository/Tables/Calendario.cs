@@ -17,6 +17,8 @@ namespace WebApiGintec.Repository.Tables
         public DateTime DataGincana { get; set; }
         [Required]        
         public bool isAtivo { get; set; }
+        [Required]        
+        public bool isDeleted { get; set; }
         
         public List<Campeonato> Campeonatos { get; set; }
     }

@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 
 namespace WebApiGintec.Application.Campeonato.Models
 {
-    public class JogadorRequest
+    public class JogadorResponse
     {
-        public int UsuarioCodigo { get; set; }
-        public int CampeonatoCodigo { get; set; }
+        public string Nomes { get; set; }
         public int TimeCodigo { get; set; }
-        public int SalaCodigo { get; set; }        
+        public int CampeonatoCodigo { get; set; }
     }
 }

@@ -90,15 +90,7 @@ namespace WebApiGintec.Controllers
         {
             var response = _campeonatoService.ObterJogadorPorCampeonatoESala(salacodigo, campeonatocodigo);
             return response.mensagem == "success" ? (response.response.Count <= 0 ? NoContent() : Ok(response.response)) : BadRequest(response);
-        }
-        [HttpPost]
-        [Route("Jogador")]
-        [Authorize]
-        public IActionResult CadastrarJogador([FromBody] JogadorRequest request)
-        {
-            var response = _campeonatoService.CadastrarJogador(request);
-            return response.mensagem == "success" ? Ok(response.response) : BadRequest(response);
-        }
+        }        
         [HttpPost]
         [Authorize]
         [Route("Vencedor/{timecodigo}/{fasecodigo}")]
@@ -108,6 +100,42 @@ namespace WebApiGintec.Controllers
 
             if (response.mensagem == "success")
                 return NoContent();
+            else 
+                return BadRequest(response);
+        }
+        [HttpPost]
+        [Authorize]
+        [Route("CadastrarJogador")]
+        public IActionResult CadastrarJogador([FromBody] JogadorRequest request)
+        {
+            var response = _campeonatoService.CadastrarJogador(request);
+
+            if (response.mensagem == "success")
+                return NoContent();
+            else 
+                return BadRequest(response);
+        }
+        [HttpGet]
+        [Authorize]
+        [Route("ObterJogadores/{campeonatocodigo}/{salaCodigo}")]
+        public IActionResult ObterJogadores([FromRoute] int campeonatocodigo, [FromRoute] int salaCodigo)
+        {
+            var response = _campeonatoService.ObterJogadores(campeonatocodigo, salaCodigo);
+
+            if (response.mensagem == "success")
+                return Ok(response.response);
+            else 
+                return BadRequest(response);
+        }
+        [HttpDelete]
+        [Authorize]
+        [Route("RemoverTime/{campeonatocodigo}/{timeCodigo}")]
+        public IActionResult RemoverTime([FromRoute] int campeonatocodigo, [FromRoute] int timeCodigo)
+        {
+            var response = _campeonatoService.RemoverTime(campeonatocodigo, timeCodigo);
+
+            if (response.mensagem == "success")
+                return Ok(response.response);
             else 
                 return BadRequest(response);
         }

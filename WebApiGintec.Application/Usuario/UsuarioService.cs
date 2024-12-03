@@ -33,24 +33,24 @@ namespace WebApiGintec.Application.Usuario
         {
             try
             {
-                var user = _context.Usuarios.Update(new Repository.Tables.Usuario
+                var user = _context.Usuarios.FirstOrDefault(x => x.Codigo == codigoUsuario);
+                if (user != null)
                 {
-                    Codigo = codigoUsuario,
-                    Email = request.Email,
-                    Nome = request.Nome,
-                    RM = request.RM,
-                    SalaCodigo = request.SalaCodigo,
-                    Senha = request.Senha,
-                    Status = request.Status,
-                    AtividadeCodigo = request.AtividadeCodigo,
-                    CampeonatoCodigo = request.CampeonatoCodigo,
-                    isPadrinho = request.IsPadrinho,
-                    oficinacodigo = request.OficinaCodigo,
+                    user.Email = request.Email ?? user.Email;
+                    user.Nome = request.Nome ?? user.Nome;
+                    user.RM = request.RM ?? user.RM;
+                    user.SalaCodigo = request.SalaCodigo ;
+                    user.Senha = request.Senha ?? user.Senha;
+                    user.Status = request.Status;
+                    user.AtividadeCodigo = request.AtividadeCodigo ?? user.AtividadeCodigo;
+                    user.CampeonatoCodigo = request.CampeonatoCodigo ?? user.CampeonatoCodigo;
+                    user.isPadrinho = request.IsPadrinho ;
+                    user.oficinacodigo = request.OficinaCodigo ?? user.oficinacodigo;
+                }
 
-                });
                 _context.SaveChanges();
 
-                return user.Entity;
+                return user;
             }
             catch (Exception)
             {
@@ -214,7 +214,11 @@ union
 select atf.usuariocodigo, (count(off.codigo) * 600) as ponto, 0 as atividadesFeitos, 0 as campeonatosFeitoss from tabatividadecampeonatorealizada as atf
 inner join taboficinas as off
 on off.codigo = atf.oficinacodigo
-group by atf.usuariocodigo) as pontuacaogeral
+group by atf.usuariocodigo
+union
+select usuariocodigo, sum(pontuacao) AS pontos, 0 as atividadesFeitos, 0 as campeonatosFeitoss from tabdoacaoaluno as da
+inner join tabdoacao as d         
+group by usuariocodigo) as pontuacaogeral
 inner join tabusuario as u 
 inner join tabsala as sala
 on sala.codigo = u.salacodigo

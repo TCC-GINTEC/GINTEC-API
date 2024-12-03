@@ -15,6 +15,8 @@ namespace WebApiGintec.Repository.Tables
 
         [Required]
         public bool IsPontuacaoExtra { get; set; }
+        [Required]
+        public bool isAtivo { get; set; }
 
         public int? SalaCodigo { get; set; }
         [Required]
