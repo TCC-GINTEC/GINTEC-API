@@ -26,7 +26,8 @@ namespace WebApiGintec.Application.Campeonato
                     CalendarioCodigo = campeonato.CalendarioCodigo,
                     Descricao = campeonato.Descricao,
                     isQuadra = campeonato.isQuadra,
-                    SalaCodigo = campeonato.SalaCodigo
+                    SalaCodigo = campeonato.SalaCodigo,
+                    isAtivo = true
                 });
                 _context.SaveChanges();
                 return new GenericResponse<Repository.Tables.Campeonato>
@@ -60,6 +61,8 @@ namespace WebApiGintec.Application.Campeonato
 
                 existingCampeonato.Descricao = campeonato.Descricao;
                 existingCampeonato.SalaCodigo = campeonato.SalaCodigo;
+                existingCampeonato.CalendarioCodigo = campeonato.CalendarioCodigo;
+                existingCampeonato.isQuadra = campeonato.isQuadra;
 
                 _context.Campeonatos.Update(existingCampeonato);
                 _context.SaveChanges();
@@ -95,6 +98,7 @@ namespace WebApiGintec.Application.Campeonato
                 }
 
                 campeonato.isAtivo = false;
+                _context.Campeonatos.Update(campeonato);
                 _context.SaveChanges();
 
                 return new GenericResponse<bool>
@@ -326,42 +330,6 @@ namespace WebApiGintec.Application.Campeonato
             catch (Exception ex)
             {
                 return new GenericResponse<List<Repository.Tables.Campeonato>>
-                {
-                    mensagem = "failed",
-                    error = ex
-                };
-            }
-        }
-        public GenericResponse<Repository.Tables.CampeonatoJogador> CadastrarJogador(JogadorRequest request)
-        {
-            try
-            {
-                if (_context.CampeonatoJogador.Include(x => x.Usuario).Any(i => i.Usuario.RM == request.RM && i.CampeonatoCodigo == request.CampeonatoCodigo))
-                    return new GenericResponse<Repository.Tables.CampeonatoJogador>()
-                    {
-                        mensagem = "player has exist",
-                        response = null
-                    };
-                var user = _context.Usuarios.FirstOrDefault(x => x.RM == request.RM);
-
-                var playerDB = _context.CampeonatoJogador.Add(new CampeonatoJogador()
-                {
-                    CampeonatoCodigo = request.CampeonatoCodigo,
-                    SalaCodigo = request.SalaCodigo,
-                    UsuarioCodigo = user.Codigo,
-                    TimeCodigo = request.TimeCodigo,
-                }).Entity;
-
-                _context.SaveChanges();
-                return new GenericResponse<CampeonatoJogador>()
-                {
-                    mensagem = "success",
-                    response = playerDB
-                };
-            }
-            catch (Exception ex)
-            {
-                return new GenericResponse<Repository.Tables.CampeonatoJogador>
                 {
                     mensagem = "failed",
                     error = ex
@@ -604,23 +572,64 @@ namespace WebApiGintec.Application.Campeonato
             }
         }
 
-        public GenericResponse<List<Repository.Tables.CampeonatoJogador>> ObterJogadores(int campeonatocodigo)
+        public GenericResponse<List<JogadorResponse>> ObterJogadores(int campeonatocodigo, int salaCodigo)
         {
             try
             {
-                return new GenericResponse<List<CampeonatoJogador>>()
+                var lst = _context.CampeonatoJogador.Include(x => x.Usuario).Where(u => u.CampeonatoCodigo == campeonatocodigo && u.SalaCodigo == salaCodigo).ToList();
+
+                var groupTime = lst.GroupBy(x => x.TimeCodigo);
+
+                var lstResponse = new List<JogadorResponse>();
+
+                foreach (var t in groupTime)
+                {
+                    lstResponse.Add(new JogadorResponse()
+                    {
+                        Nomes = string.Join(", ", lst.Where(x => x.TimeCodigo == t.Key).Select(x => x.Usuario.Nome)),
+                        CampeonatoCodigo = campeonatocodigo,
+                        TimeCodigo = t.Key
+                    });
+                }
+                return new GenericResponse<List<JogadorResponse>>()
                 {
                     mensagem = "success",
-                    response = _context.CampeonatoJogador.Include(x => x.Usuario).Where(u => u.CampeonatoCodigo == campeonatocodigo).ToList()
+                    response = lstResponse
                 };
             }
             catch (Exception ex)
             {
-                return new GenericResponse<List<CampeonatoJogador>>()
+                return new GenericResponse<List<JogadorResponse>>()
                 {
                     error = ex,
                     mensagem = "failed",
                     response = null
+                };
+            }
+        }
+
+        public GenericResponse<bool> RemoverTime(int campeonatocodigo, int timeCodigo)
+        {
+            try
+            {
+                _context.CampeonatoJogador.RemoveRange(
+                    _context.CampeonatoJogador
+                    .Where(x => x.CampeonatoCodigo == campeonatocodigo && x.TimeCodigo == timeCodigo)
+                    .ToList());
+                _context.SaveChanges();
+
+                return new GenericResponse<bool>()
+                {
+                    mensagem = "success",
+                    response = false
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse<bool>()
+                {
+                    mensagem = "success",
+                    response = false
                 };
             }
         }

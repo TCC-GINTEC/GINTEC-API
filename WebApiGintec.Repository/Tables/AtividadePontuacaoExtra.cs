@@ -14,6 +14,8 @@ namespace WebApiGintec.Repository.Tables
 
         [Required]
         public int AtividadeCodigo { get; set; }        
+        [Required]
+        public bool isAtivo { get; set; }        
 
         [ForeignKey("AtividadeCodigo")]
         public Atividade? Atividade { get; set; }

@@ -50,7 +50,10 @@ namespace WebApiGintec.Repository
         UNION
         SELECT COUNT(*) * 600 AS qtdpontos
         FROM tabatividadecampeonatorealizada AS attfeita
-        WHERE attfeita.oficinacodigo IS NOT NULL                  
+        WHERE attfeita.oficinacodigo IS NOT NULL   
+union
+		select sum(pontuacao) AS qtdpontos from tabdoacaoaluno as da
+		inner join tabdoacao as d         
     ) AS prop";
 
             var resultado = await this.Database
@@ -66,7 +69,7 @@ namespace WebApiGintec.Repository
 sum(atx.pontuacao) as Value 
 from tabatividadecampeonatorealizada as attfeita
 left join tabatividadepontuacaoextra as atx on atx.atividadecodigo = attfeita.atividadecodigo
-where attfeita.atividadecodigo is not null ";
+where attfeita.atividadecodigo is not null";
 
             var resultado = await this.Database
                 .SqlQueryRaw<int>(sql)
